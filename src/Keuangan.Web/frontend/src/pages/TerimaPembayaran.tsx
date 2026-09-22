@@ -190,7 +190,7 @@ export function TerimaPembayaran() {
                             <p className="text-white font-medium truncate">
                               {t.feeTypeName}
                               {t.cicilanDari != null && <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-purple-500/20 text-purple-400">{tt('label.cicilanKe')} {t.cicilanKe}/{t.cicilanDari}</span>}
-                              {t.status === 'SebagianLunas' && <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/20 text-amber-400">{tt('status.sebagian')}</span>}
+                              {t.status === 'Sebagian' && <span className="ml-1.5 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-amber-500/20 text-amber-400">{tt('status.sebagian')}</span>}
                             </p>
                             <p className="text-[10px] text-gray-500">{t.periodLabel}{t.paidAmount > 0 && <span className="text-amber-400"> - {tt('misc.sisaDariTotal')} {fmt(sisa)} / {fmt(t.amount)}</span>}</p>
                           </div>

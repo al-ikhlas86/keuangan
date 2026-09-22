@@ -18,8 +18,11 @@ export function SiswaByStatus({ kind }: { kind: 'Lunas' | 'BelumLunas' }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetchTagihan({ status: kind })
-      .then((t) => { if (!cancelled) setItems(t); })
+    // "Belum Lunas" (menu) mencakup 2 status backend (BelumDibayar DAN
+    // Sebagian - keduanya "belum lunas" dari sisi pengguna) - fetch semua
+    // lalu filter client-side, drpd 2x request per status utk digabung.
+    fetchTagihan()
+      .then((t) => { if (!cancelled) setItems(t.filter((x) => (kind === 'Lunas') === (x.status === 'Lunas'))); })
       .catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat tagihan.', 'error'))
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
@@ -48,7 +51,7 @@ export function SiswaByStatus({ kind }: { kind: 'Lunas' | 'BelumLunas' }) {
                   <td className="py-2 text-right text-gray-300">{fmt(t.amount)}</td>
                   <td className="py-2 text-right text-emerald-400">{fmt(t.paidAmount)}</td>
                   <td className="py-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'SebagianLunas' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'Sebagian' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span>
                   </td>
                 </tr>
               )) : <tr><td colSpan={6} className="py-8 text-center text-gray-400">{tt('misc.tidakAdaData')}</td></tr>}

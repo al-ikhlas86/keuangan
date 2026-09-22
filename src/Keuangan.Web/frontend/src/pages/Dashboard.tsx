@@ -34,7 +34,7 @@ export function Dashboard() {
         ];
         if (showSiswaStats) {
           tasks.push(fetchStudents().then((s) => { if (!cancelled) setStudentCount(s.length); }));
-          tasks.push(fetchTagihan({ status: 'BelumLunas' }).then((t) => { if (!cancelled) setTagihanBelumLunas(t.length); }));
+          tasks.push(fetchTagihan().then((t) => { if (!cancelled) setTagihanBelumLunas(t.filter((x) => x.status !== 'Lunas').length); }));
         }
         await Promise.all(tasks);
       } catch (err) {

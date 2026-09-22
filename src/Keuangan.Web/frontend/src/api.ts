@@ -97,7 +97,11 @@ export function updateAccount(id: number, input: { name?: string; isActive?: boo
 }
 
 // ---- Siswa (identitas READ-ONLY hasil sinkron Webview-App, lihat StudentsEndpoints.cs) ----
-export type StudentStatus = 'Aktif' | 'Lulus' | 'Nonaktif';
+// Cocok PERSIS enum StudentStatus backend (Keuangan.Data/Enums.cs) - HANYA
+// 2 nilai, "Nonaktif" TIDAK PERNAH ada (bug nyata sebelumnya: field ini
+// ditambah menebak-nebak drpd dicek ke source, untung tidak sampai kirim
+// balik ke server jadi tidak pernah 400 - beda dari TagihanStatus di bawah).
+export type StudentStatus = 'Aktif' | 'Lulus';
 export interface StudentDto {
   id: number; studentCode: string; hubId: string | null; nis: string; name: string; className: string; tingkat: string;
   status: StudentStatus; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
@@ -145,7 +149,14 @@ export function createFeeTypeRate(feeTypeId: number, input: { angkatan: string; 
 }
 
 // ---- Tagihan ----
-export type TagihanStatus = 'BelumLunas' | 'SebagianLunas' | 'Lunas';
+// Cocok PERSIS enum TagihanStatus backend (Keuangan.Data/Enums.cs) - BUKAN
+// gaya penamaan Akuntansi/Django lama (BelumLunas/SebagianLunas). BUG NYATA
+// (2026-09-22, dilaporkan user langsung): sebelumnya field ini ditebak dari
+// konvensi lama tanpa dicek ke source backend, request GET /api/tagihan/
+// ?status=BelumLunas ditolak 400 krn enum tidak match (server pakai
+// BelumDibayar/Sebagian/Lunas) - pelajaran: SELALU cek Enums.cs, jangan
+// asumsikan penamaan dari sistem lain terbawa apa adanya.
+export type TagihanStatus = 'BelumDibayar' | 'Sebagian' | 'Lunas';
 export interface TagihanDto {
   id: number; tagihanCode: string; studentName: string; feeTypeName: string; periodLabel: string;
   amount: number; paidAmount: number; status: TagihanStatus; dueDate: string | null; cicilanKe: number | null; cicilanDari: number | null;

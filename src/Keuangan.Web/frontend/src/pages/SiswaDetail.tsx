@@ -114,7 +114,7 @@ export function SiswaDetail() {
                       <td className="py-2 text-gray-300">{t.periodLabel}</td>
                       <td className="py-2 text-right text-gray-300">{fmt(t.amount)}</td>
                       <td className="py-2 text-right text-emerald-400">{fmt(t.paidAmount)}</td>
-                      <td className="py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'SebagianLunas' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span></td>
+                      <td className="py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'Sebagian' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span></td>
                     </tr>
                   )) : <tr><td colSpan={4} className="py-6 text-center text-gray-400">{tt('msg.belumAdaData')}</td></tr>}
                 </tbody>

@@ -153,10 +153,10 @@ export function TagihanPembayaran() {
                     <td className="py-3 text-gray-300">{t.periodLabel}</td>
                     <td className="py-3 text-right text-white">
                       {fmt(t.amount)}
-                      {t.status === 'SebagianLunas' && <span className="block text-[9px] text-amber-400">{tt('misc.sisaDariTotal')} {fmt(t.amount - t.paidAmount)}</span>}
+                      {t.status === 'Sebagian' && <span className="block text-[9px] text-amber-400">{tt('misc.sisaDariTotal')} {fmt(t.amount - t.paidAmount)}</span>}
                     </td>
                     <td className="py-3 text-gray-300">{t.dueDate || '-'}</td>
-                    <td className="py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'SebagianLunas' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span></td>
+                    <td className="py-3"><span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${t.status === 'Lunas' ? 'bg-emerald-500/20 text-emerald-400' : t.status === 'Sebagian' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}`}>{t.status}</span></td>
                     <td className="py-3"><TableActions onEdit={t.paidAmount === 0 ? () => setFormOpen(t) : undefined} onDelete={t.paidAmount === 0 ? () => hapus(t.id) : undefined} /></td>
                   </tr>
                 )) : <tr><td colSpan={8} className="py-8 text-center text-gray-400">{tt('msg.belumAdaData')}</td></tr>}

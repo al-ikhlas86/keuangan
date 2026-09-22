@@ -21,7 +21,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="text-sm font-bold text-white leading-tight">Yayasan Al-Ikhlas 86</h1>
-            <p className="text-[10px] text-gray-500">{lang === 'en' ? 'Accounting System' : 'Sistem Akuntansi'}</p>
+            <p className="text-[10px] text-gray-500">{lang === 'en' ? 'Finance System' : 'Sistem Keuangan'}</p>
           </div>
         </div>
       </div>

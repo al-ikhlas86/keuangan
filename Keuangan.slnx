@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Keuangan.Data/Keuangan.Data.csproj" />
+    <Project Path="src/Keuangan.Launcher/Keuangan.Launcher.csproj" />
+    <Project Path="src/Keuangan.MigrationTool/Keuangan.MigrationTool.csproj" />
+    <Project Path="src/Keuangan.Web/Keuangan.Web.csproj" />
+  </Folder>
+</Solution>

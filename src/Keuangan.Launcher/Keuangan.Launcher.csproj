@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Keuangan.Data\Keuangan.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+    <!-- Windows Service (mode "server") - lihat WindowsServiceHelper.cs. -->
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <Version>0.1.0</Version>
+    <!-- PublishTrimmed=false DARI AWAL (2026-09-22) - BUKAN ditambah belakangan
+         setelah kejadian sama seperti DataMaster (bug nyata: publish
+         self-contained CI diam2 tidak menyertakan System.IO.Compression.ZipFile.dll,
+         ApplyAndRestart auto-update lempar FileNotFoundException) - lihat
+         UpdateChecker.cs & catatan lengkap di plan/Deployment. -->
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="System.IO.Compression.ZipFile" />
+  </ItemGroup>
+
+</Project>

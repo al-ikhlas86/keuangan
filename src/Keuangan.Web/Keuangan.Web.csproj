@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Keuangan.Data\Keuangan.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Windows Service (mode "server") - port pola sama persis DataMaster.Web
+         (lihat catatan panjang di Program.cs) - AMAN dipasang walau app tetap
+         dijalankan cara lama (anak proses Launcher) - UseWindowsService() cuma
+         aktif kalau proses BENAR2 dimulai Service Control Manager, no-op total
+         di skenario lain (mode developer/klien tidak pernah lewat jalur ini). -->
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
+    <!-- Login sungguhan (fitur baru, lihat Context plan) - cookie session
+         standar ASP.NET Core Identity, BUKAN dari paket Identity penuh (terlalu
+         berat utk 4 role tetap) - cukup middleware Authentication+Authorization
+         bawaan + tabel Users manual di Keuangan.Data. -->
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

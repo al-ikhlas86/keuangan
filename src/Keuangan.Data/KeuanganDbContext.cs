@@ -23,6 +23,7 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
     public DbSet<PeriodClosing> PeriodClosings => Set<PeriodClosing>();
     public DbSet<RecurringBillingRun> RecurringBillingRuns => Set<RecurringBillingRun>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -111,6 +112,7 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
         // --- Student ---
         b.Entity<Student>().HasIndex(s => s.StudentCode).IsUnique();
         b.Entity<Student>().HasIndex(s => s.Nis).IsUnique();
+        b.Entity<Student>().HasIndex(s => s.HubId).IsUnique(); // kunci pencocokan pull-sync, lihat catatan Entities/Student.cs
         b.Entity<Student>().HasIndex(s => s.VaNumber).IsUnique();
         b.Entity<Student>().Property(s => s.MonthlyFee).HasPrecision(14, 2);
         b.Entity<Student>().Property(s => s.SemesterTotal).HasPrecision(14, 2);
@@ -150,5 +152,8 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
         b.Entity<AuditLog>().HasIndex(a => a.AuditCode).IsUnique();
         b.Entity<AuditLog>()
             .HasOne(a => a.ActorUser).WithMany().HasForeignKey(a => a.ActorUserId).OnDelete(DeleteBehavior.SetNull);
+
+        // --- SystemSetting ---
+        b.Entity<SystemSetting>().HasKey(s => s.SettingKey);
     }
 }

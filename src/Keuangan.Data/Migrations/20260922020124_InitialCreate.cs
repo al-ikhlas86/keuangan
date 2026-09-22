@@ -113,21 +113,36 @@ namespace Keuangan.Data.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     StudentCode = table.Column<string>(type: "TEXT", nullable: false),
+                    HubId = table.Column<int>(type: "INTEGER", nullable: false),
                     Nis = table.Column<string>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     ClassName = table.Column<string>(type: "TEXT", nullable: true),
+                    Tingkat = table.Column<string>(type: "TEXT", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    SyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     BankAccountNo = table.Column<string>(type: "TEXT", nullable: true),
                     MonthlyFee = table.Column<decimal>(type: "TEXT", precision: 14, scale: 2, nullable: false),
                     SemesterTotal = table.Column<decimal>(type: "TEXT", precision: 14, scale: 2, nullable: false),
                     Angkatan = table.Column<string>(type: "TEXT", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
                     VaNumber = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Students", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SystemSettings",
+                columns: table => new
+                {
+                    SettingKey = table.Column<string>(type: "TEXT", nullable: false),
+                    SettingValue = table.Column<string>(type: "TEXT", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SystemSettings", x => x.SettingKey);
                 });
 
             migrationBuilder.CreateTable(
@@ -633,6 +648,12 @@ namespace Keuangan.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Students_HubId",
+                table: "Students",
+                column: "HubId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Students_Nis",
                 table: "Students",
                 column: "Nis",
@@ -778,6 +799,9 @@ namespace Keuangan.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "StudentVirtualAccounts");
+
+            migrationBuilder.DropTable(
+                name: "SystemSettings");
 
             migrationBuilder.DropTable(
                 name: "ChartOfAccounts");

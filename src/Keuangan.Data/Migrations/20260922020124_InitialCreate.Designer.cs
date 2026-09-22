@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Keuangan.Data.Migrations
 {
     [DbContext(typeof(KeuanganDbContext))]
-    [Migration("20260922015443_InitialCreate")]
+    [Migration("20260922020124_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -568,7 +568,7 @@ namespace Keuangan.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<int>("HubId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("MonthlyFee")
@@ -594,10 +594,19 @@ namespace Keuangan.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("SyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Tingkat")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("VaNumber")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HubId")
+                        .IsUnique();
 
                     b.HasIndex("Nis")
                         .IsUnique();
@@ -671,6 +680,22 @@ namespace Keuangan.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("StudentVirtualAccounts");
+                });
+
+            modelBuilder.Entity("Keuangan.Data.Entities.SystemSetting", b =>
+                {
+                    b.Property<string>("SettingKey")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SettingValue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SettingKey");
+
+                    b.ToTable("SystemSettings");
                 });
 
             modelBuilder.Entity("Keuangan.Data.Entities.Tagihan", b =>

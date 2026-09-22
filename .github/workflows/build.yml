@@ -40,10 +40,15 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
+      # Versi HARUS cocok dgn yang dipakai generate package-lock.json lokal
+      # (Node 24 / npm 11) - BUG NYATA ditemukan lewat run CI sungguhan:
+      # `npm ci` di Node 22 menolak lockfile ini ("Missing: @emnapi/runtime
+      # from lock file") krn resolusi optional dependency platform-native
+      # (rolldown-vite) beda antar versi npm, walau package.json sama persis.
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Build frontend React (Keuangan.Web/frontend -> wwwroot)
         working-directory: src/Keuangan.Web/frontend

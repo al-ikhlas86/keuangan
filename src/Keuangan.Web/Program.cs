@@ -81,6 +81,14 @@ using (var scope = app.Services.CreateScope())
     scope.ServiceProvider.GetRequiredService<KeuanganDbContext>().Database.Migrate();
 }
 
+// Serve hasil build React (Keuangan.Web/frontend -> wwwroot, lihat
+// vite.config.ts) sbg static files - base '/' jadi UseDefaultFiles()
+// otomatis serve wwwroot/index.html di "/". Tidak perlu SPA fallback utk
+// path lain: app ini TIDAK pakai client-side URL routing (navigasi halaman
+// murni state React/localStorage via RoleContext, bukan react-router).
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();
 // Lihat DeveloperModeMiddleware.cs - HARUS setelah UseAuthentication (spy
 // tidak ketiban-timpa hasil cookie-auth) DAN sebelum UseAuthorization (spy

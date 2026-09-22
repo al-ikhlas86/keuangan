@@ -67,6 +67,9 @@ builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppSett
 builder.Services.AddHttpClient<KeuanganSyncService>();
 builder.Services.AddHostedService<KeuanganSyncHostedService>();
 
+builder.Services.AddScoped<DocumentNumberService>();
+builder.Services.AddScoped<TagihanService>();
+
 var app = builder.Build();
 
 // Migrasi otomatis saat start - port pola sama persis DataMaster.Web
@@ -88,5 +91,13 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { success = true, service = "keuangan-web" }));
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
+app.MapChartOfAccountsEndpoints();
+app.MapStudentsEndpoints();
+app.MapFeeTypesEndpoints();
+app.MapTransactionsEndpoints();
+app.MapTagihanEndpoints();
+app.MapPaymentsEndpoints();
+app.MapPeriodsEndpoints();
+app.MapCashRecapEndpoints();
 
 app.Run();

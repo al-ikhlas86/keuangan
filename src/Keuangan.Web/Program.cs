@@ -96,7 +96,8 @@ app.UseAuthentication();
 app.UseMiddleware<DeveloperModeMiddleware>();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Ok(new { success = true, service = "keuangan-web" }));
+app.MapGet("/health", () => Results.Ok(new { success = true, service = "keuangan-web", version = VersionEndpoints.ServerVersion }));
+app.MapVersionEndpoints();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapChartOfAccountsEndpoints();

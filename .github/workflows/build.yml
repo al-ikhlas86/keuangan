@@ -52,6 +52,8 @@ jobs:
 
       - name: Build frontend React (Keuangan.Web/frontend -> wwwroot)
         working-directory: src/Keuangan.Web/frontend
+        env:
+          VITE_APP_VERSION: ${{ steps.version.outputs.version }}
         run: |
           npm ci
           npm run build

@@ -178,6 +178,15 @@ export function fetchEmployees(q?: string) {
   return apiFetch<EmployeeDto[]>(`/api/employees/${qs}`);
 }
 
+// ---- Versi aplikasi (Pengaturan, lihat VersionEndpoints.cs) ----
+export interface VersionInfoDto {
+  version: string; startedAt: string; databaseMigration: string | null; migrationCount: number;
+  latest: { status: 'terbaru' | 'ada_update' | 'tidak_bisa_dicek'; tag: string | null; checkedAt: string };
+}
+export function fetchVersionInfo(force = false) {
+  return apiFetch<VersionInfoDto>(`/api/version${force ? '?force=true' : ''}`);
+}
+
 // ---- Status sinkron ke Webview-App (banner, lihat SyncEndpoints.cs) ----
 export interface SyncStatusDto {
   state: 'belum_mulai' | 'menunggu_persetujuan' | 'tersambung' | 'error';

@@ -9,6 +9,9 @@ import react from '@vitejs/plugin-react'
 // tanpa CORS saat development.
 export default defineConfig({
   plugins: [react()],
+  // Versi tampilan (UI) ditanam saat build - CI mengisi VITE_APP_VERSION dari tag rilis. Dibandingkan
+  // dgn versi server di Pengaturan utk mendeteksi update setengah jalan (UI baru, server lama).
+  define: { __APP_VERSION__: JSON.stringify(process.env.VITE_APP_VERSION ?? 'dev') },
   base: '/',
   build: {
     outDir: '../wwwroot',

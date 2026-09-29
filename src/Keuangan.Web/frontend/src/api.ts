@@ -45,6 +45,67 @@ export async function apiFetch<T = unknown>(url: string, options: RequestInit = 
   return body as T;
 }
 
+// Unggah/unduh berkas (apiFetch selalu JSON) - header X-Dev-Role tetap dikirim, Content-Type
+// SENGAJA tidak diset utk FormData (browser mengisi boundary sendiri).
+async function apiRaw(url: string, options: RequestInit): Promise<Response> {
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string> | undefined) };
+  if (currentDevRole) headers['X-Dev-Role'] = currentDevRole;
+  const res = await fetch(url, { credentials: 'include', ...options, headers });
+  if (!res.ok) {
+    let pesan = `HTTP ${res.status}`;
+    try { const b = await res.json(); if (b?.message) pesan = b.message; } catch { /* bukan JSON */ }
+    throw new ApiError(pesan, res.status);
+  }
+  return res;
+}
+
+async function apiUpload<T>(url: string, file: File): Promise<T> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await apiRaw(url, { method: 'POST', body: fd });
+  const body = await res.json();
+  if (body && typeof body === 'object' && 'success' in body && !body.success) throw new ApiError(body.message || 'Permintaan gagal.', res.status);
+  return body as T; // amplop penuh {success, message?, data}
+}
+
+// ---- Nomor VA massal (lihat VaEndpoints.cs) ----
+export interface VaImportSummary {
+  barisData: number; isi: number; ganti: number; tambah: number; sama: number; error: number; peringatan: number;
+  daftarGanti: { nama: string; nis: string; lama: string | null; baru: string }[];
+  masalah: { baris: number; nama: string | null; nis: string | null; level: 'error' | 'peringatan'; pesan: string }[];
+  totalMasalah: number;
+}
+export async function downloadVaTemplate(hubIds: number[]) {
+  const res = await apiRaw('/api/students/va-template', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hubIds }),
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `template-va-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+export async function previewVaImport(file: File): Promise<VaImportSummary> {
+  return (await apiUpload<{ data: VaImportSummary }>('/api/students/va-import/preview', file)).data;
+}
+export async function commitVaImport(file: File): Promise<{ message: string; data: VaImportSummary }> {
+  const r = await apiUpload<{ message: string; data: VaImportSummary }>('/api/students/va-import/commit', file);
+  return { message: r.message, data: r.data };
+}
+export function addStudentVa(id: number, vaNumber: string) {
+  return apiFetch<null>(`/api/students/${id}/va`, { method: 'POST', body: JSON.stringify({ vaNumber }) });
+}
+export function deleteStudentVa(id: number, vaId: number) {
+  return apiFetch<null>(`/api/students/${id}/va/${vaId}`, { method: 'DELETE' });
+}
+export function promoteStudentVa(id: number, vaId: number) {
+  return apiFetch<null>(`/api/students/${id}/va/${vaId}/jadikan-utama`, { method: 'POST' });
+}
+
 // ---- Auth (BARU - Akuntansi lama tidak punya login sungguhan sama sekali) ----
 export type InstallMode = 'developer' | 'server' | 'klien';
 export function fetchAuthMode() {
@@ -103,8 +164,8 @@ export function updateAccount(id: number, input: { name?: string; isActive?: boo
 // dicek ke source - beda dari TagihanStatus di bawah).
 export type StudentStatus = 'Aktif' | 'Lulus' | 'Keluar';
 export interface StudentDto {
-  id: number; studentCode: string; hubId: string | null; nis: string; name: string; className: string; tingkat: string;
-  status: StudentStatus; katalog?: string | null; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
+  id: number; studentCode: string; hubId: number | string | null; nis: string; name: string; className: string; tingkat: string;
+  status: StudentStatus; katalog?: string | null; vaTambahan?: number; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
 }
 // ---- Pegawai (identitas READ-ONLY hasil sinkron Webview-App, lihat EmployeesEndpoints.cs) ----
 export type EmployeeStatus = 'Aktif' | 'Nonaktif';

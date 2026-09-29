@@ -26,6 +26,7 @@ public static class StudentsEndpoints
                 {
                     s.Id, s.StudentCode, s.HubId, s.Nis, s.Name, s.ClassName, s.Tingkat,
                     Status = s.Status.ToString(), s.Katalog, s.SyncedAt, s.BankAccountNo, s.Angkatan, s.VaNumber,
+                    VaTambahan = s.VirtualAccounts.Count(),
                 })
                 .ToListAsync();
             return Results.Ok(new { success = true, data = students });
@@ -63,7 +64,19 @@ public static class StudentsEndpoints
 
             if (req.BankAccountNo is not null) s.BankAccountNo = req.BankAccountNo.Trim();
             if (req.Angkatan is not null) s.Angkatan = req.Angkatan.Trim();
-            if (req.VaNumber is not null) s.VaNumber = req.VaNumber.Trim();
+            if (req.VaNumber is not null)
+            {
+                // Kosong -> null (bukan "": indeks unik VaNumber menolak dua siswa ber-"" sama).
+                var (va, err) = VaLogic.Normalisasi(req.VaNumber);
+                if (err is not null) return Results.BadRequest(new { success = false, message = err });
+                if (va is not null && va != s.VaNumber)
+                {
+                    var pemilik = await VaLogic.PemilikVa(db, va);
+                    if (pemilik is not null)
+                        return Results.Conflict(new { success = false, message = $"VA {va} sudah dipakai {pemilik.Nama} ({pemilik.Nis})." });
+                }
+                s.VaNumber = va;
+            }
             await db.SaveChangesAsync();
             return Results.Ok(new { success = true, message = "Rincian keuangan siswa diperbarui." });
         });

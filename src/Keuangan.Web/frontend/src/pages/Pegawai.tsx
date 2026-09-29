@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useI18n } from '../contexts/I18nContext';
 import { useToast } from '../contexts/ToastContext';
 import { SearchBar } from '../components/SearchBar';
 import { SyncStatusBanner } from '../components/SyncStatusBanner';
+import { FilterSelect } from '../components/FilterSelect';
 import { fetchEmployees, ApiError, type EmployeeDto } from '../api';
 
 // Daftar pegawai/guru READ-ONLY - identitas datang dari Data Master lewat sinkron
@@ -14,6 +15,10 @@ export function Pegawai() {
   const [query, setQuery] = useState('');
   const [employees, setEmployees] = useState<EmployeeDto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [katalog, setKatalog] = useState('semua');
+  const [jabatan, setJabatan] = useState('semua');
+  const [status, setStatus] = useState('semua');
+  const [urut, setUrut] = useState('nama');
 
   useEffect(() => {
     let cancelled = false;
@@ -25,14 +30,39 @@ export function Pegawai() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const aktif = employees.filter((e) => e.status === 'Aktif').length;
+  const katalogOpsi = useMemo(() => [...new Set(employees.map((e) => e.katalog).filter((k): k is string => !!k))].sort(), [employees]);
+  const jabatanOpsi = useMemo(() => [...new Set(employees.map((e) => e.jabatan).filter((j): j is string => !!j))].sort(), [employees]);
+
+  const tampil = useMemo(() => {
+    const hasil = employees.filter((e) =>
+      (katalog === 'semua' || e.katalog === katalog)
+      && (jabatan === 'semua' || e.jabatan === jabatan)
+      && (status === 'semua' || e.status === status));
+    const cmp = (a: string | null, b: string | null) => (a ?? '').localeCompare(b ?? '', 'id', { numeric: true });
+    return hasil.sort((a, b) =>
+      urut === 'jabatan' ? cmp(a.jabatan, b.jabatan) || cmp(a.name, b.name)
+      : urut === 'katalog' ? cmp(a.katalog, b.katalog) || cmp(a.name, b.name)
+      : cmp(a.name, b.name));
+  }, [employees, katalog, jabatan, status, urut]);
+
+  const aktif = tampil.filter((e) => e.status === 'Aktif').length;
 
   return (
     <>
       <SyncStatusBanner />
       <div className="bg-dark-800 rounded-xl border border-gray-700/50 p-5">
-        <h3 className="text-sm font-bold text-white mb-1">{tt('menu.pegawai')} ({aktif} aktif / {employees.length})</h3>
+        <h3 className="text-sm font-bold text-white mb-1">{tt('menu.pegawai')} ({aktif} aktif / {tampil.length})</h3>
         <p className="text-[10px] text-gray-500 mb-3">Data pegawai dan guru otomatis dari Data Master - tidak perlu diinput manual.</p>
+        <div className="flex flex-wrap items-end gap-3 mb-3">
+          <FilterSelect label="Katalog" value={katalog} onChange={setKatalog}
+            options={[{ value: 'semua', label: 'Semua katalog' }, ...katalogOpsi.map((k) => ({ value: k, label: k }))]} />
+          <FilterSelect label="Jabatan" value={jabatan} onChange={setJabatan}
+            options={[{ value: 'semua', label: 'Semua jabatan' }, ...jabatanOpsi.map((j) => ({ value: j, label: j }))]} />
+          <FilterSelect label="Status" value={status} onChange={setStatus}
+            options={[{ value: 'semua', label: 'Semua' }, { value: 'Aktif', label: 'Aktif' }, { value: 'Nonaktif', label: 'Nonaktif' }]} />
+          <FilterSelect label="Urutkan" value={urut} onChange={setUrut}
+            options={[{ value: 'nama', label: 'Nama' }, { value: 'jabatan', label: 'Jabatan' }, { value: 'katalog', label: 'Katalog' }]} />
+        </div>
         <div className="mb-4"><SearchBar value={query} onChange={setQuery} placeholder="Cari nama atau NIP..." /></div>
         {loading ? <p className="text-xs text-gray-500 py-4">Memuat...</p> : (
           <div className="overflow-x-auto">
@@ -44,7 +74,7 @@ export function Pegawai() {
                 </tr>
               </thead>
               <tbody>
-                {employees.length ? employees.map((e) => (
+                {tampil.length ? tampil.map((e) => (
                   <tr key={e.id} className="border-b border-gray-700/30 hover:bg-dark-850/50">
                     <td className="py-3 font-medium text-white">{e.name}{e.isKepalaSekolah ? <span className="ml-1.5 text-[10px] text-brand-400">Kepala Sekolah</span> : null}</td>
                     <td className="py-3 text-gray-300">{e.nip || '-'}</td>

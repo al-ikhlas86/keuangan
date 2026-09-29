@@ -23,7 +23,7 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
         <tbody>
           {students.length ? students.map((s) => (
             <tr key={s.id} className="border-b border-gray-700/30 hover:bg-dark-850/50">
-              <td className="py-3 text-gray-400">{s.vaNumber || '-'}</td>
+              <td className="py-3 text-gray-400">{s.vaNumber || '-'}{s.vaTambahan ? <span className="ml-1.5 px-1.5 py-0.5 rounded bg-blue-500/15 text-[10px] text-blue-400">+{s.vaTambahan}</span> : null}</td>
               <td className="py-3 font-medium text-white">
                 <button onClick={() => { openStudentProfile(String(s.id)); navigateTo('siswa_detail'); }} className="hover:underline hover:text-brand-400 text-left">{s.name}</button>
               </td>
@@ -36,7 +36,7 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
                 </span>
               </td>
               <td className="py-3">
-                <button onClick={() => { openStudentProfile(String(s.id)); navigateTo('siswa_detail'); }} className="no-print text-[10px] text-brand-400 hover:text-brand-300">{tt('btn.lihatDetail') || 'Detail'}</button>
+                <button onClick={() => { openStudentProfile(String(s.id)); navigateTo('siswa_detail'); }} className="no-print text-[10px] text-brand-400 hover:text-brand-300">Detail</button>
               </td>
             </tr>
           )) : <tr><td colSpan={7} className="py-8 text-center text-gray-400">{emptyMessage}</td></tr>}

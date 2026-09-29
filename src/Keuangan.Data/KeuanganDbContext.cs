@@ -16,6 +16,7 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<PaymentReference> PaymentReferences => Set<PaymentReference>();
     public DbSet<Student> Students => Set<Student>();
+    public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<StudentVirtualAccount> StudentVirtualAccounts => Set<StudentVirtualAccount>();
     public DbSet<FeeType> FeeTypes => Set<FeeType>();
     public DbSet<FeeTypeRate> FeeTypeRates => Set<FeeTypeRate>();
@@ -111,9 +112,14 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
 
         // --- Student ---
         b.Entity<Student>().HasIndex(s => s.StudentCode).IsUnique();
-        b.Entity<Student>().HasIndex(s => s.Nis).IsUnique();
+        // Nis TIDAK lagi unik (2026-09-29): Keuangan kini menarik >1 katalog (SD+TK), NIS
+        // antar-katalog tidak dijamin unik; kunci identitas sebenarnya HubId (unik global).
+        b.Entity<Student>().HasIndex(s => s.Nis);
         b.Entity<Student>().HasIndex(s => s.HubId).IsUnique(); // kunci pencocokan pull-sync, lihat catatan Entities/Student.cs
         b.Entity<Student>().HasIndex(s => s.VaNumber).IsUnique();
+
+        // --- Employee (pull dari Webview-App, lihat Entities/Employee.cs) ---
+        b.Entity<Employee>().HasIndex(e => e.HubId).IsUnique();
         b.Entity<Student>().Property(s => s.MonthlyFee).HasPrecision(14, 2);
         b.Entity<Student>().Property(s => s.SemesterTotal).HasPrecision(14, 2);
 

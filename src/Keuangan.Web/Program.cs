@@ -101,6 +101,8 @@ app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapChartOfAccountsEndpoints();
 app.MapStudentsEndpoints();
+app.MapEmployeesEndpoints();
+app.MapSyncEndpoints();
 app.MapFeeTypesEndpoints();
 app.MapTransactionsEndpoints();
 app.MapTagihanEndpoints();

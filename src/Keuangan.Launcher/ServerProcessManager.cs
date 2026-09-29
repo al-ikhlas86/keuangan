@@ -54,6 +54,7 @@ public sealed class ServerProcessManager : IDisposable
         Directory.CreateDirectory(appDataDir);
         var connectionString = $"Data Source={Path.Combine(appDataDir, "keuangan.db")}";
         var webviewApiUrl = _config.WebviewApiUrl;
+        var installationLabel = _config.InstallationLabel;
 
         // Windows Service - HANYA mode "server" (lihat WindowsServiceHelper.cs
         // & komentar panjang ServerProcessManager.cs DataMaster utk alasan
@@ -92,6 +93,7 @@ public sealed class ServerProcessManager : IDisposable
         psi.EnvironmentVariables["ConnectionStrings__Keuangan"] = connectionString;
         psi.EnvironmentVariables["AppSettings__Mode"] = _config.Mode;
         if (!string.IsNullOrEmpty(webviewApiUrl)) psi.EnvironmentVariables["AppSettings__WebviewApiUrl"] = webviewApiUrl;
+        if (!string.IsNullOrEmpty(installationLabel)) psi.EnvironmentVariables["AppSettings__InstallationLabel"] = installationLabel;
 
         _logWriter = new StreamWriter(File.Open(Path.Combine(logDir, $"web_{DateTime.Now:yyyy-MM-dd}.log"), FileMode.Append, FileAccess.Write, FileShare.Read)) { AutoFlush = true };
 
@@ -124,21 +126,23 @@ public sealed class ServerProcessManager : IDisposable
             return false;
         }
 
+        var installationLabel = _config.InstallationLabel;
+
         if (WindowsServiceHelper.IsInstalled())
         {
             if (!WindowsServiceHelper.BinPathCocok(webExePath))
             {
-                return WindowsServiceHelper.PerbaikiBinPathDanMulai(webExePath, _config.ServerPort, connectionString, webviewApiUrl)
+                return WindowsServiceHelper.PerbaikiBinPathDanMulai(webExePath, _config.ServerPort, connectionString, webviewApiUrl, installationLabel)
                     && SetelahServiceSiap();
             }
 
-            WindowsServiceHelper.TerapkanEnvironment(_config.ServerPort, connectionString, webviewApiUrl);
+            WindowsServiceHelper.TerapkanEnvironment(_config.ServerPort, connectionString, webviewApiUrl, installationLabel);
             WindowsServiceHelper.EnsureStarted();
             if (WindowsServiceHelper.IsRunning()) return SetelahServiceSiap();
             return false;
         }
 
-        return WindowsServiceHelper.TryInstallAndStart(webExePath, DataDirectory, _config.ServerPort, connectionString, webviewApiUrl)
+        return WindowsServiceHelper.TryInstallAndStart(webExePath, DataDirectory, _config.ServerPort, connectionString, webviewApiUrl, installationLabel)
             && SetelahServiceSiap();
     }
 

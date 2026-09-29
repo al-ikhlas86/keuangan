@@ -28,7 +28,7 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
                 <button onClick={() => { openStudentProfile(String(s.id)); navigateTo('siswa_detail'); }} className="hover:underline hover:text-brand-400 text-left">{s.name}</button>
               </td>
               <td className="py-3 text-gray-300">{s.nis}</td>
-              <td className="py-3 text-gray-300">{s.className}</td>
+              <td className="py-3 text-gray-300">{s.className}{s.katalog ? <span className="ml-1.5 text-[10px] text-gray-500">{s.katalog}</span> : null}</td>
               <td className="py-3 text-gray-300">{s.angkatan || '-'}</td>
               <td className="py-3">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${s.status === 'Aktif' ? 'bg-emerald-500/20 text-emerald-400' : s.status === 'Lulus' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>

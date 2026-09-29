@@ -25,7 +25,7 @@ public static class StudentsEndpoints
                 .Select(s => new
                 {
                     s.Id, s.StudentCode, s.HubId, s.Nis, s.Name, s.ClassName, s.Tingkat,
-                    Status = s.Status.ToString(), s.SyncedAt, s.BankAccountNo, s.Angkatan, s.VaNumber,
+                    Status = s.Status.ToString(), s.Katalog, s.SyncedAt, s.BankAccountNo, s.Angkatan, s.VaNumber,
                 })
                 .ToListAsync();
             return Results.Ok(new { success = true, data = students });
@@ -45,7 +45,7 @@ public static class StudentsEndpoints
                 data = new
                 {
                     s.Id, s.StudentCode, s.HubId, s.Nis, s.Name, s.ClassName, s.Tingkat,
-                    Status = s.Status.ToString(), s.SyncedAt, s.BankAccountNo, s.Angkatan, s.VaNumber,
+                    Status = s.Status.ToString(), s.Katalog, s.SyncedAt, s.BankAccountNo, s.Angkatan, s.VaNumber,
                     VirtualAccounts = s.VirtualAccounts.Select(v => new { v.Id, v.VaNumber, v.Label, v.IsActive }),
                     TagihanTerbaru = s.TagihanList.Select(t => new
                     {

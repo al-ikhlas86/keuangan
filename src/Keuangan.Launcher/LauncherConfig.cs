@@ -36,6 +36,11 @@ public sealed class LauncherConfig
     // (fitur opsional, boleh diisi belakangan lewat "Ganti Pengaturan Jaringan").
     public string? WebviewApiUrl { get; set; }
 
+    // Dipakai kalau Mode="server" - nama yang dikirim ke Webview-App saat minta izin
+    // (label di panel Status Sinkronisasi > Keuangan milik Admin IT), mis. "Keuangan
+    // SD - Ruang TU". Kosong = pakai nama PC (Environment.MachineName).
+    public string? InstallationLabel { get; set; }
+
     // false = SetupWizardWindow WAJIB ditampilkan sebelum MainWindow - lihat
     // App.xaml.cs. Di-set true otomatis begitu wizard pertama kali selesai.
     public bool SetupSelesai { get; set; }

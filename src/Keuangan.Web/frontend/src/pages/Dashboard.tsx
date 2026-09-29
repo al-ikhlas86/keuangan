@@ -4,6 +4,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { useRole } from '../contexts/RoleContext';
 import { useToast } from '../contexts/ToastContext';
 import { LineChart } from '../components/LineChart';
+import { SyncStatusBanner } from '../components/SyncStatusBanner';
 import { ExportBtn } from '../components/Buttons';
 import { KwitansiBtn } from '../components/Buttons';
 import { fmt, computeMonthlyTrend, downloadCsv } from '../lib/format';
@@ -79,6 +80,7 @@ export function Dashboard() {
 
   return (
     <>
+      <SyncStatusBanner />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {stats.map((s, i) => (
           <div key={i} className="card-stat bg-dark-800 rounded-xl border border-gray-700/50 p-5">

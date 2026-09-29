@@ -11,6 +11,8 @@ namespace Keuangan.Launcher;
 public partial class SetupWizardWindow : Window
 {
     private readonly LauncherConfig _config;
+    // Harus sama dengan AppOptions.DefaultWebviewApiUrl di Keuangan.Web (proyek terpisah).
+    private const string DefaultWebviewApiUrl = "https://alikhlas86.duckdns.org/mobile-api";
 
     public SetupWizardWindow(LauncherConfig config)
     {
@@ -19,7 +21,8 @@ public partial class SetupWizardWindow : Window
         TxtNamaPcServer.Text = Environment.MachineName;
 
         TxtServerPort.Text = config.ServerPort.ToString();
-        TxtWebviewApiUrl.Text = config.WebviewApiUrl ?? "";
+        TxtWebviewApiUrl.Text = string.IsNullOrWhiteSpace(config.WebviewApiUrl) ? DefaultWebviewApiUrl : config.WebviewApiUrl;
+        TxtNamaInstalasi.Text = config.InstallationLabel ?? "";
         if (config.Mode == "server") RbServer.IsChecked = true;
         else if (config.Mode == "klien")
         {
@@ -52,7 +55,11 @@ public partial class SetupWizardWindow : Window
             _config.ServerPort = port;
             _config.KlienServerUrl = null;
             var webviewUrl = TxtWebviewApiUrl.Text.Trim();
-            _config.WebviewApiUrl = webviewUrl.Length > 0 ? webviewUrl.TrimEnd('/') : null;
+            // Sama dengan alamat bawaan/kosong -> simpan null (biarkan Web memakai default-nya
+            // sendiri, jadi kalau alamat bawaan berubah di rilis berikut PC ini ikut).
+            _config.WebviewApiUrl = webviewUrl.Length > 0 && webviewUrl.TrimEnd('/') != DefaultWebviewApiUrl ? webviewUrl.TrimEnd('/') : null;
+            var namaInstalasi = TxtNamaInstalasi.Text.Trim();
+            _config.InstallationLabel = namaInstalasi.Length > 0 ? namaInstalasi : null;
         }
         else if (RbKlien.IsChecked == true)
         {

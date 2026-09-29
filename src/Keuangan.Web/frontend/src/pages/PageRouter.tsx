@@ -8,6 +8,7 @@ import { JenisPembayaran } from './JenisPembayaran';
 import { Siswa } from './Siswa';
 import { SiswaByStatus } from './SiswaByStatus';
 import { ArsipSiswa } from './ArsipSiswa';
+import { Pegawai } from './Pegawai';
 import { SiswaDetail } from './SiswaDetail';
 import { TagihanPembayaran } from './TagihanPembayaran';
 import { TerimaPembayaran } from './TerimaPembayaran';
@@ -45,6 +46,7 @@ export function PageRouter() {
   if (page === 'siswa_lunas') return <SiswaByStatus kind="Lunas" />;
   if (page === 'siswa_belum_lunas') return <SiswaByStatus kind="BelumLunas" />;
   if (page === 'arsip_siswa') return <ArsipSiswa />;
+  if (page === 'pegawai') return <Pegawai />;
   if (page === 'siswa_detail') return <SiswaDetail />;
   if (page === 'tagihan_pembayaran') return <TagihanPembayaran />;
   if (page === 'terima_pembayaran') return <TerimaPembayaran />;

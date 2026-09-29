@@ -31,7 +31,15 @@ public enum FeeKategori { Wajib, Opsional }
 
 public enum FeeFrekuensi { Sekali, Bulanan, Cicilan }
 
-public enum StudentStatus { Aktif, Lulus }
+// Keluar (2026-09-29) = siswa TIDAK ADA LAGI di data sumber (Data Master) - mis.
+// pindah/dihapus. Ditambah di ULANG (bukan menyisip) supaya nilai Aktif/Lulus
+// yang sudah tersimpan tetap sama. Baris tidak pernah dihapus (riwayat
+// tagihan/pembayaran harus tetap utuh).
+public enum StudentStatus { Aktif, Lulus, Keluar }
+
+// Status pegawai di Keuangan - Nonaktif = keluar/dinonaktifkan di Data Master
+// atau sudah tidak ada di data sumber (baris tetap ada utk riwayat slip gaji).
+public enum EmployeeStatus { Aktif, Nonaktif }
 
 public enum DocType { TRX, PAY, TAG, JE }
 

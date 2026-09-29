@@ -48,10 +48,14 @@
                                        Text="Catat nama ini - saat setup PC klien nanti, alamat yang diisi di sana adalah nama ini (bukan alamat IP), yang tidak berubah walau PC dimatikan/dinyalakan ulang."/>
                             <TextBlock Margin="0,10,0,0" FontSize="12" Foreground="#6B7280" TextWrapping="Wrap"
                                        Text="Setelah ini, izinkan port di atas masuk lewat Windows Firewall PC ini (Control Panel → Windows Defender Firewall → Pengaturan lanjutan → Inbound Rules → New Rule → Port), supaya PC klien bisa menyambung."/>
-                            <TextBlock Margin="0,14,0,0" FontSize="13" FontWeight="SemiBold" Text="Alamat Webview-App (opsional - sinkron data siswa)"/>
+                            <TextBlock Margin="0,14,0,0" FontSize="13" FontWeight="SemiBold" Text="Nama instalasi ini (dilihat Admin IT saat menyetujui)"/>
+                            <TextBox x:Name="TxtNamaInstalasi" Margin="0,4,0,0" Padding="6" MaxLength="100"/>
+                            <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="#6B7280" TextWrapping="Wrap"
+                                       Text="Contoh: Keuangan Yayasan - Ruang TU. Kosongkan untuk memakai nama PC ini. Instalasi ini akan otomatis meminta izin Admin IT sebelum menarik data siswa &amp; pegawai."/>
+                            <TextBlock Margin="0,14,0,0" FontSize="13" FontWeight="SemiBold" Text="Alamat Webview-App (sudah terisi otomatis)"/>
                             <TextBox x:Name="TxtWebviewApiUrl" Margin="0,4,0,0" Padding="6"/>
                             <TextBlock Margin="0,4,0,0" FontSize="12" Foreground="#6B7280" TextWrapping="Wrap"
-                                       Text="Kosongkan kalau belum tahu - bisa diisi belakangan lewat 'Ganti Pengaturan Jaringan'. Setelah diisi, instalasi ini akan minta izin Admin IT sebelum mulai menarik data siswa."/>
+                                       Text="Biarkan apa adanya kecuali diminta developer mengganti. Boleh dikosongkan - alamat bawaan tetap dipakai."/>
                         </StackPanel>
                         <StackPanel x:Name="PanelKlien" Visibility="Collapsed">
                             <TextBlock Text="Alamat PC server di jaringan ini" FontWeight="SemiBold" FontSize="13" Margin="0,0,0,4"/>

@@ -81,12 +81,12 @@ public static class WindowsServiceHelper
         }
     }
 
-    public static bool PerbaikiBinPathDanMulai(string webExePathBenar, int port, string connectionString, string? webviewApiUrl)
+    public static bool PerbaikiBinPathDanMulai(string webExePathBenar, int port, string connectionString, string? webviewApiUrl, string? installationLabel = null)
     {
         try
         {
             if (!RunElevated("sc.exe", $"config {ServiceName} binPath= \"{webExePathBenar}\"")) return false;
-            TerapkanEnvironment(port, connectionString, webviewApiUrl);
+            TerapkanEnvironment(port, connectionString, webviewApiUrl, installationLabel);
             RunElevated("sc.exe", $"stop {ServiceName}");
             using (var scWait = new ServiceController(ServiceName))
             {
@@ -103,7 +103,7 @@ public static class WindowsServiceHelper
         }
     }
 
-    public static bool TerapkanEnvironment(int port, string connectionString, string? webviewApiUrl)
+    public static bool TerapkanEnvironment(int port, string connectionString, string? webviewApiUrl, string? installationLabel = null)
     {
         var vars = new System.Collections.Generic.List<string>
         {
@@ -113,6 +113,10 @@ public static class WindowsServiceHelper
             "AppSettings__Mode=server",
         };
         if (!string.IsNullOrEmpty(webviewApiUrl)) vars.Add($"AppSettings__WebviewApiUrl={webviewApiUrl}");
+        // Label dikutip di baris perintah reg.exe (/d "...") - buang tanda kutip & backslash
+        // supaya tidak merusak nilai REG_MULTI_SZ.
+        var labelAman = (installationLabel ?? "").Replace("\"", "").Replace("\\", "").Trim();
+        if (labelAman.Length > 0) vars.Add($"AppSettings__InstallationLabel={labelAman}");
 
         var data = string.Join("\\0", vars);
         return RunElevated("reg.exe", $"add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\{ServiceName}\" /v Environment /t REG_MULTI_SZ /d \"{data}\" /f");
@@ -138,7 +142,7 @@ public static class WindowsServiceHelper
         catch { /* non-fatal - StartAsync pemanggil tetap akan polling /health, gagal jelas terlihat dari situ */ }
     }
 
-    public static bool TryInstallAndStart(string webExePath, string dataDirectory, int port, string connectionString, string? webviewApiUrl)
+    public static bool TryInstallAndStart(string webExePath, string dataDirectory, int port, string connectionString, string? webviewApiUrl, string? installationLabel = null)
     {
         try
         {
@@ -149,7 +153,7 @@ public static class WindowsServiceHelper
 
             RunElevated("sc.exe", $"failure {ServiceName} reset= 86400 actions= restart/5000/restart/30000/restart/60000");
 
-            TerapkanEnvironment(port, connectionString, webviewApiUrl);
+            TerapkanEnvironment(port, connectionString, webviewApiUrl, installationLabel);
 
             if (!RunElevated("sc.exe", $"start {ServiceName}")) return false;
 

@@ -29,6 +29,7 @@ public class Student
     public string? Tingkat { get; set; }
     public StudentStatus Status { get; set; } = StudentStatus.Aktif;
     public DateTime? SyncedAt { get; set; } // null = belum pernah berhasil sinkron ulang sejak dibuat
+    public string? Katalog { get; set; } // kode katalog sumber (mis. "SD"/"TK") - dari Webview-App, null utk data sebelum v0.2.0
 
     // --- Field KHUSUS Keuangan (TIDAK ada di students_cache, ditambahkan
     //     lokal di sini - inilah "rincian yang ditambahkan Keuangan" yg

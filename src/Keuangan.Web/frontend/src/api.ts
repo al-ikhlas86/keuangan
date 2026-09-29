@@ -97,15 +97,36 @@ export function updateAccount(id: number, input: { name?: string; isActive?: boo
 }
 
 // ---- Siswa (identitas READ-ONLY hasil sinkron Webview-App, lihat StudentsEndpoints.cs) ----
-// Cocok PERSIS enum StudentStatus backend (Keuangan.Data/Enums.cs) - HANYA
-// 2 nilai, "Nonaktif" TIDAK PERNAH ada (bug nyata sebelumnya: field ini
-// ditambah menebak-nebak drpd dicek ke source, untung tidak sampai kirim
-// balik ke server jadi tidak pernah 400 - beda dari TagihanStatus di bawah).
-export type StudentStatus = 'Aktif' | 'Lulus';
+// Cocok PERSIS enum StudentStatus backend (Keuangan.Data/Enums.cs) - 3 nilai
+// (Keluar ditambah v0.2.0 = siswa hilang dari data sumber), "Nonaktif" TIDAK
+// PERNAH ada (bug nyata sebelumnya: field ini ditambah menebak-nebak drpd
+// dicek ke source - beda dari TagihanStatus di bawah).
+export type StudentStatus = 'Aktif' | 'Lulus' | 'Keluar';
 export interface StudentDto {
   id: number; studentCode: string; hubId: string | null; nis: string; name: string; className: string; tingkat: string;
-  status: StudentStatus; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
+  status: StudentStatus; katalog?: string | null; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
 }
+// ---- Pegawai (identitas READ-ONLY hasil sinkron Webview-App, lihat EmployeesEndpoints.cs) ----
+export type EmployeeStatus = 'Aktif' | 'Nonaktif';
+export interface EmployeeDto {
+  id: number; hubId: number; name: string; nip: string | null; jabatan: string | null; isKepalaSekolah: boolean;
+  status: EmployeeStatus; statusKeluar: string | null; katalog: string | null; syncedAt: string | null;
+}
+export function fetchEmployees(q?: string) {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : '';
+  return apiFetch<EmployeeDto[]>(`/api/employees/${qs}`);
+}
+
+// ---- Status sinkron ke Webview-App (banner, lihat SyncEndpoints.cs) ----
+export interface SyncStatusDto {
+  state: 'belum_mulai' | 'menunggu_persetujuan' | 'tersambung' | 'error';
+  stateAt: string | null; lastOkAt: string | null; error: string | null; label: string;
+  katalog: string[]; students: number; employees: number;
+}
+export function fetchSyncStatus() {
+  return apiFetch<SyncStatusDto>('/api/sync/status');
+}
+
 export interface StudentVaDto { id: number; vaNumber: string; label: string; isActive: boolean }
 export interface StudentTagihanRingkasDto { id: number; tagihanCode: string; periodLabel: string; amount: number; paidAmount: number; status: TagihanStatus; dueDate: string | null }
 export interface StudentDetailDto extends StudentDto { virtualAccounts: StudentVaDto[]; tagihanTerbaru: StudentTagihanRingkasDto[] }

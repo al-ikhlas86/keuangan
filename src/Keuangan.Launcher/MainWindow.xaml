@@ -6,7 +6,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         xmlns:local="clr-namespace:Keuangan.Launcher"
         mc:Ignorable="d"
-        Title="Keuangan" Height="800" Width="1280"
+        Title="Keuangan" Icon="app.ico" Height="800" Width="1280"
         WindowStartupLocation="CenterScreen"
         MinHeight="600" MinWidth="900"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize" WindowState="Maximized">

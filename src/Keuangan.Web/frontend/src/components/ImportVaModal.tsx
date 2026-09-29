@@ -51,7 +51,7 @@ export function ImportVaModal({ onClose, onDone }: { onClose: () => void; onDone
         </div>
 
         <p className="text-[11px] text-gray-400 mb-3">
-          Gunakan file hasil <b>Unduh Template</b>. Isi kolom "No VA 1" (utama) dan "No VA 2, 3, ..." (tambahan). Sel kosong tidak mengubah apa pun.
+          Gunakan file hasil <b>Unduh Template</b>. Isi kolom "No VA 1" (utama) dan "No VA 2, 3, ..." (tambahan): angka saja, boleh diawali 0 (biarkan kolom berformat Teks). Sel kosong tidak mengubah apa pun.
         </p>
 
         <input ref={inputRef} type="file" accept=".xlsx" className="hidden" onChange={(e) => pilihFile(e.target.files?.[0] ?? null)} />
@@ -98,7 +98,7 @@ export function ImportVaModal({ onClose, onDone }: { onClose: () => void; onDone
                     <thead><tr className="text-gray-400 text-left"><th className="p-1.5">Baris</th><th className="p-1.5">Siswa</th><th className="p-1.5">Masalah</th></tr></thead>
                     <tbody>{summary.masalah.map((m, i) => (
                       <tr key={i} className="border-t border-gray-700/30 align-top">
-                        <td className="p-1.5 text-gray-400">{m.baris}</td>
+                        <td className="p-1.5 text-gray-400">{m.baris || '-'}</td>
                         <td className="p-1.5 text-gray-300">{m.nama}{m.nis ? ` (${m.nis})` : ''}</td>
                         <td className={`p-1.5 ${m.level === 'error' ? 'text-red-300' : 'text-amber-300'}`}>{m.pesan}</td>
                       </tr>

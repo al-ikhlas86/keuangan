@@ -1,7 +1,7 @@
 <Window x:Class="Keuangan.Launcher.SetupWizardWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Keuangan - Setup Awal" Height="660" Width="640"
+        Title="Keuangan - Setup Awal" Icon="app.ico" Height="660" Width="640"
         MinHeight="420" MinWidth="560"
         WindowStartupLocation="CenterScreen"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize">

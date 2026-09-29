@@ -17,7 +17,7 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
           <tr className="border-b border-gray-700/50 text-gray-400 text-left">
             <th className="pb-3">{tt('col.nomorVa')}</th><th className="pb-3">{tt('col.nama')}</th>
             <th className="pb-3">{tt('col.nis')}</th><th className="pb-3">{tt('col.kelas')}</th>
-            <th className="pb-3">{tt('col.angkatan')}</th><th className="pb-3">{tt('col.status')}</th><th className="pb-3">{tt('col.aksi')}</th>
+            <th className="pb-3">{tt('col.status')}</th><th className="pb-3">{tt('col.aksi')}</th>
           </tr>
         </thead>
         <tbody>
@@ -29,7 +29,6 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
               </td>
               <td className="py-3 text-gray-300">{s.nis}</td>
               <td className="py-3 text-gray-300">{s.className}{s.katalog ? <span className="ml-1.5 text-[10px] text-gray-500">{s.katalog}</span> : null}</td>
-              <td className="py-3 text-gray-300">{s.angkatan || '-'}</td>
               <td className="py-3">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${s.status === 'Aktif' ? 'bg-emerald-500/20 text-emerald-400' : s.status === 'Lulus' ? 'bg-blue-500/20 text-blue-400' : 'bg-gray-500/20 text-gray-400'}`}>
                   {s.status}
@@ -39,7 +38,7 @@ export function StudentTable({ students, emptyMessage }: { students: StudentDto[
                 <button onClick={() => { openStudentProfile(String(s.id)); navigateTo('siswa_detail'); }} className="no-print text-[10px] text-brand-400 hover:text-brand-300">Detail</button>
               </td>
             </tr>
-          )) : <tr><td colSpan={7} className="py-8 text-center text-gray-400">{emptyMessage}</td></tr>}
+          )) : <tr><td colSpan={6} className="py-8 text-center text-gray-400">{emptyMessage}</td></tr>}
         </tbody>
       </table>
     </div>

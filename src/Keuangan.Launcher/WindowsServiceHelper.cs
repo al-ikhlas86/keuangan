@@ -127,6 +127,59 @@ public static class WindowsServiceHelper
         try { RunElevated("sc.exe", $"stop {ServiceName}"); } catch { /* non-fatal - fallback tetap dicoba walau stop gagal */ }
     }
 
+    // Dipanggil UpdateChecker.ApplyAndRestart SEBELUM berkas web\ ditimpa: WAJIB menunggu
+    // sampai service benar2 Stopped (bukan cuma StopPending) supaya tidak race dgn berkas
+    // yang masih dikunci proses lama. Setelah relaunch, EnsureStarted() menyalakannya lagi.
+    public static void StopDanTungguUntukUpdate()
+    {
+        try
+        {
+            using var sc = new ServiceController(ServiceName);
+            sc.Refresh();
+            if (sc.Status == ServiceControllerStatus.Stopped) return;
+            RunElevated("sc.exe", $"stop {ServiceName}");
+            sc.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20));
+        }
+        catch { /* non-fatal - kalau gagal berhenti, xcopy paling apes gagal menimpa exe yang dikunci; dicoba lagi saat update berikutnya */ }
+    }
+
+    // Aturan Windows Firewall utk port server (inbound, HANYA dari subnet lokal) - tanpa ini
+    // PC klien di jaringan yang sama tidak bisa menyambung ke PC server walau service jalan
+    // (Firewall Windows menolak koneksi masuk secara bawaan). Dibuat sekali (cek dulu supaya
+    // tidak memunculkan UAC tiap Launcher dibuka); nama tanpa spasi krn dikutip di cmd /c.
+    private const string FirewallRuleName = "KeuanganServer";
+
+    public static bool AturanFirewallAda()
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "netsh.exe",
+                Arguments = $"advfirewall firewall show rule name={FirewallRuleName}",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                CreateNoWindow = true,
+            };
+            using var p = Process.Start(psi);
+            if (p is null) return false;
+            p.StandardOutput.ReadToEnd();
+            p.WaitForExit(5000);
+            return p.HasExited && p.ExitCode == 0;
+        }
+        catch { return false; }
+    }
+
+    public static void PastikanAturanFirewall(int port)
+    {
+        try
+        {
+            if (AturanFirewallAda()) return;
+            RunElevated("netsh.exe", $"advfirewall firewall add rule name={FirewallRuleName} dir=in action=allow protocol=TCP localport={port} remoteip=localsubnet profile=any");
+        }
+        catch { /* non-fatal - kalau gagal, panduan wizard (buka port manual) tetap berlaku */ }
+    }
+
     public static void EnsureStarted()
     {
         try
@@ -154,6 +207,8 @@ public static class WindowsServiceHelper
             RunElevated("sc.exe", $"failure {ServiceName} reset= 86400 actions= restart/5000/restart/30000/restart/60000");
 
             TerapkanEnvironment(port, connectionString, webviewApiUrl, installationLabel);
+
+            PastikanAturanFirewall(port);
 
             if (!RunElevated("sc.exe", $"start {ServiceName}")) return false;
 

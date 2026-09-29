@@ -4,7 +4,7 @@
 export const DEFAULT_FOUNDATION_NAME = 'Yayasan Al-Ikhlas 86';
 export const DEFAULT_FOUNDATION_ADDRESS = 'Jl. Nakula 6 C, Jakasetia, Kec. Bekasi Selatan, Kota Bekasi Prov. Jawa Barat';
 export const KWITANSI_ORG_CITY = 'Bekasi';
-export const KWITANSI_LOGO_URL = '/static/logo/kwitansi.png';
+export const KWITANSI_LOGO_URL = '/logo.png';
 export const STEMPEL_URL = '/static/logo/stempel.png';
 export const KWITANSI_ORG_NAME = 'SDIT & TKIT Al-Ikhlas 86';
 export const KWITANSI_ORG_ADDRESS_LINE1 = 'Jl. Nakula 6 Blok C';

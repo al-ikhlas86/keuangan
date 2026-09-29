@@ -14,4 +14,12 @@ public partial class UpdateSplashWindow : Window
     }
 
     public void SetStatus(string status) => Dispatcher.Invoke(() => TxtStatus.Text = status);
+
+    // null = indeterminate (cek versi / tahap ekstrak-salin), 0-100 = persentase unduhan
+    // sungguhan - lihat UpdateChecker.ProgressChanged.
+    public void SetProgress(double? persen) => Dispatcher.Invoke(() =>
+    {
+        Progress.IsIndeterminate = persen is null;
+        if (persen is not null) Progress.Value = persen.Value;
+    });
 }

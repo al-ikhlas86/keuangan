@@ -128,6 +128,9 @@ public sealed class ServerProcessManager : IDisposable
 
         var installationLabel = _config.InstallationLabel;
 
+        // Instalasi lama (sebelum aturan firewall otomatis) - lengkapi sekali saja.
+        if (WindowsServiceHelper.IsInstalled()) WindowsServiceHelper.PastikanAturanFirewall(_config.ServerPort);
+
         if (WindowsServiceHelper.IsInstalled())
         {
             if (!WindowsServiceHelper.BinPathCocok(webExePath))

@@ -17,6 +17,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <Version>0.1.0</Version>
+    <!-- Logo Yayasan (D:\icon\logo.png) - ikon exe + ikon jendela (title bar/Alt-Tab). Dijadikan
+         Resource juga supaya URI relatif Icon="app.ico" di XAML bisa di-resolve WPF saat runtime. -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <!-- PublishTrimmed=false DARI AWAL (2026-09-22) - BUKAN ditambah belakangan
          setelah kejadian sama seperti DataMaster (bug nyata: publish
          self-contained CI diam2 tidak menyertakan System.IO.Compression.ZipFile.dll,
@@ -24,6 +27,11 @@
          UpdateChecker.cs & catatan lengkap di plan/Deployment. -->
     <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="app.ico" />
+    <Resource Include="logo.png" />
+  </ItemGroup>
 
   <ItemGroup>
     <TrimmerRootAssembly Include="System.IO.Compression.ZipFile" />

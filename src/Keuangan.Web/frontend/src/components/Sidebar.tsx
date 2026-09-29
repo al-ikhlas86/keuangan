@@ -17,7 +17,7 @@ export function Sidebar() {
       <div className="p-5 border-b border-gray-700/50">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-            <img src="/favicon.svg" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-sm font-bold text-white leading-tight">Yayasan Al-Ikhlas 86</h1>

@@ -53,7 +53,7 @@ public partial class MainWindow : Window
             if (_server.IsKlien)
             {
                 SetSplash("Gagal menyambung ke server Keuangan.");
-                MessageBox.Show(this, "Tidak dapat menyambung ke PC server Keuangan di jaringan. Pastikan PC server sudah menyala & aplikasi Keuangan-nya sudah terbuka, PC ini terhubung ke jaringan yang sama, dan alamat di appsettings.json (KlienServerUrl) masih benar - lalu coba buka ulang aplikasi ini.",
+                MessageBox.Show(this, "Tidak dapat menyambung ke PC server Keuangan di jaringan. Pastikan PC server sudah menyala (Keuangan di PC server berjalan otomatis sebagai layanan Windows, tidak perlu dibuka), PC ini terhubung ke jaringan yang sama, Firewall PC server mengizinkan port-nya, dan alamat di appsettings.json (KlienServerUrl) masih benar - lalu coba buka ulang aplikasi ini.",
                     "Keuangan - Gagal Menyambung", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else

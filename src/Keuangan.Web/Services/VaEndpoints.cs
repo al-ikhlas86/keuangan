@@ -158,14 +158,15 @@ internal static class VaLogic
     private const int JumlahKolomVaDefault = 10;
     private static readonly Regex KolomVa = new(@"^\s*no\.?\s*va\s*(\d+)\s*$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // VA = huruf/angka tanpa spasi, 6-32 karakter (format persis tiap bank belum
-    // dipastikan - sengaja longgar, tapi cukup utk menangkap salah ketik parah).
+    // VA = ANGKA saja (boleh diawali 0 - disimpan sbg teks, nol tidak hilang), tanpa spasi,
+    // 4-32 digit. Panjang persis tiap bank belum dipastikan - sengaja longgar, cukup utk
+    // menangkap salah ketik parah (huruf, tanda baca, terlalu pendek).
     public static (string? Va, string? Error) Normalisasi(string? mentah)
     {
         var raw = new string((mentah ?? "").Where(c => !char.IsWhiteSpace(c)).ToArray());
         if (raw.Length == 0) return (null, null);
-        if (raw.Length < 6 || raw.Length > 32 || !raw.All(char.IsAsciiLetterOrDigit))
-            return (null, $"Format VA \"{raw}\" tidak valid (hanya huruf/angka, 6-32 karakter).");
+        if (raw.Length < 4 || raw.Length > 32 || !raw.All(char.IsAsciiDigit))
+            return (null, $"Format VA \"{raw}\" tidak valid (harus angka saja, 4-32 digit).");
         return (raw, null);
     }
 
@@ -228,8 +229,8 @@ internal static class VaLogic
             "3. Baris boleh diurutkan ulang atau dihapus (baris yang dihapus tidak diproses).",
             "4. Sel VA yang KOSONG = tidak diubah (tidak menghapus VA yang sudah ada). Hapus VA dari halaman detail siswa.",
             "5. Jika VA 1 berbeda dari yang tersimpan, di pratinjau akan ditandai \"akan diganti\".",
-            "6. Satu nomor VA hanya boleh dipakai satu siswa. VA: huruf/angka tanpa spasi, 6-32 karakter.",
-            "7. Jika mengetik nomor VA sendiri, kolom sudah berformat Teks - jangan diubah jadi Angka.",
+            "6. Satu nomor VA hanya boleh dipakai satu siswa. VA: angka saja tanpa spasi (4-32 digit), BOLEH diawali 0.",
+            "7. Kolom VA sudah berformat Teks supaya angka 0 di depan tidak hilang - JANGAN diubah jadi Angka/General. Kalau menempel (paste) dari file lain, pakai Paste Special > Text/Values.",
         ];
         for (var i = 0; i < baris.Length; i++) info.Cell(i + 1, 1).Value = baris[i];
         info.Cell(1, 1).Style.Font.Bold = true;
@@ -296,6 +297,7 @@ internal static class VaLogic
         var plan = new VaImportPlan();
         // Pass 1: kumpulkan entri valid per baris.
         var entri = new List<(int Baris, Student S, int Nomor, string Va)>();
+        var selAngka = 0;
         for (var r = 2; r <= lastRow; r++)
         {
             var idCell = ws.Cell(r, idCol);
@@ -317,11 +319,15 @@ internal static class VaLogic
                 var (va, err, angka) = BacaSelVa(ws.Cell(r, kolom));
                 if (err is not null) { plan.Masalah.Add(new VaMasalah(r, s.Name, s.Nis, "error", $"No VA {nomor}: {err}")); continue; }
                 if (va is null) continue;
-                if (angka) plan.Masalah.Add(new VaMasalah(r, s.Name, s.Nis, "peringatan", $"No VA {nomor} tersimpan sebagai angka - pastikan tidak ada nol di depan yang hilang."));
+                if (angka) selAngka++;
                 if (!dalamBaris.Add(va)) continue; // VA sama diketik dua kali di baris yg sama
                 entri.Add((r, s, nomor, va));
             }
         }
+
+        if (selAngka > 0)
+            plan.Masalah.Add(new VaMasalah(0, null, null, "peringatan",
+                $"{selAngka} nomor VA di file tersimpan sebagai ANGKA (bukan teks). Kalau ada VA yang seharusnya diawali 0, nol itu sudah hilang di Excel - periksa, dan format kolom sebagai Teks sebelum mengisi."));
 
         // VA yang dipakai >1 siswa di dalam file -> semua entrinya ditolak.
         var bentrokFile = entri.GroupBy(e => e.Va).Where(g => g.Select(x => x.S.Id).Distinct().Count() > 1)
@@ -368,7 +374,9 @@ internal static class VaLogic
             var d = cell.GetDouble();
             if (d >= 1e15)
                 return (null, "VA tersimpan sebagai angka dan kemungkinan sudah dibulatkan Excel (angka >15 digit). Format kolom sebagai Teks lalu isi ulang.", true);
-            raw = d.ToString("0", CultureInfo.InvariantCulture);
+            // Teks yang TAMPIL di sel (menghormati format kustom spt 0000000000 -> nol di depan ikut).
+            var tampil = cell.GetFormattedString();
+            raw = tampil.All(char.IsAsciiDigit) && tampil.Length > 0 ? tampil : d.ToString("0", CultureInfo.InvariantCulture);
         }
         else raw = cell.GetString();
         var (va, err) = Normalisasi(raw);

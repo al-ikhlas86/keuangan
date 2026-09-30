@@ -7,7 +7,7 @@ export type Lang = 'id' | 'en';
 export const translations: Record<Lang, Record<string, string>> = {
   id: {
     'menu.dashboard':'Dashboard','menu.jurnal':'Jurnal Umum','menu.laporan':'Laporan Keuangan','menu.laporan_group':'Laporan Keuangan','menu.rekonsiliasi_bank':'Rekonsiliasi Bank',
-    'menu.peran':'Peran','menu.audit_role':'Audit Role','menu.penerimaan':'Penerimaan','menu.pengeluaran':'Pengeluaran','menu.penerimaan_kas':'Penerimaan Kas',
+    'menu.peran':'Peran','menu.audit_role':'Audit Role','menu.riwayat_audit':'Riwayat Audit','menu.penerimaan':'Penerimaan','menu.pengeluaran':'Pengeluaran','menu.penerimaan_kas':'Penerimaan Kas',
     'menu.rekapKasAdminKeuangan':'Rekap Kas - Admin Keuangan','menu.laporanKasirOversight':'Laporan Kasir','menu.jurnalAkuntansiOversight':'Jurnal - Akuntansi',
     'menu.pegawai_group':'Pegawai','menu.pegawai':'Pegawai','menu.penggajian':'Penggajian','menu.performa':'Performa','menu.arsip_pegawai':'Arsip Pegawai',
     'menu.siswa_group':'Data Siswa','menu.siswa':'Data Siswa','menu.tagihan':'Tagihan Pembayaran','menu.siswa_lunas':'Sudah Lunas','menu.siswa_belum_lunas':'Belum Lunas','menu.arsip_siswa':'Arsip Siswa','menu.pembayaran_group':'Pembayaran',
@@ -299,7 +299,7 @@ export const translations: Record<Lang, Record<string, string>> = {
   },
   en: {
     'menu.dashboard':'Dashboard','menu.jurnal':'General Journal','menu.laporan':'Financial Report','menu.laporan_group':'Financial Report','menu.rekonsiliasi_bank':'Bank Reconciliation',
-    'menu.peran':'Roles','menu.audit_role':'Audit Role','menu.penerimaan':'Income','menu.pengeluaran':'Expenses','menu.penerimaan_kas':'Cash Income',
+    'menu.peran':'Roles','menu.audit_role':'Audit Role','menu.riwayat_audit':'Riwayat Audit','menu.penerimaan':'Income','menu.pengeluaran':'Expenses','menu.penerimaan_kas':'Cash Income',
     'menu.rekapKasAdminKeuangan':'Cash Recap - Finance Admin','menu.laporanKasirOversight':'Cashier Report','menu.jurnalAkuntansiOversight':'Journal - Accounting',
     'menu.pegawai_group':'Staff','menu.pegawai':'Staff','menu.penggajian':'Payroll','menu.performa':'Performance','menu.arsip_pegawai':'Staff Archive',
     'menu.siswa_group':'Students','menu.siswa':'Students','menu.tagihan':'Billing','menu.siswa_lunas':'Paid','menu.siswa_belum_lunas':'Unpaid','menu.arsip_siswa':'Student Archive','menu.pembayaran_group':'Payments',

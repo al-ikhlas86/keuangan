@@ -5,10 +5,14 @@ import { PrintBtn, ExportBtn } from '../components/Buttons';
 import { fmt, downloadCsv } from '../lib/format';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS } from '../lib/consts';
 import { fetchTransactions, fetchTransactionDetail, fetchAccounts, ApiError, type TransactionDto, type AccountDto } from '../api';
+import { useRole } from '../contexts/RoleContext';
+import { scopeRolesFor } from '../lib/scope';
 
 interface AccountAgg { label: string; value: number }
 
-export function Laporan() {
+// forcedRoles: daftar peran pembuat (dipakai menu laporan admin); kosong = ikut lingkup peran yang login.
+export function Laporan({ forcedRoles }: { forcedRoles?: string } = {}) {
+  const { role } = useRole();
   const { tt } = useI18n();
   const { showToast } = useToast();
   const [txList, setTxList] = useState<TransactionDto[]>([]);
@@ -23,7 +27,7 @@ export function Laporan() {
     async function load() {
       setLoading(true);
       try {
-        const [list, accounts] = await Promise.all([fetchTransactions(), fetchAccounts()]);
+        const [list, accounts] = await Promise.all([fetchTransactions({ roles: forcedRoles ?? scopeRolesFor(role) }), fetchAccounts()]);
         const accountTypeById: Record<number, AccountDto> = {};
         accounts.forEach((a) => { accountTypeById[a.id] = a; });
         const details = await Promise.all(list.map((t) => fetchTransactionDetail(t.id)));

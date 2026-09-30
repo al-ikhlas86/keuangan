@@ -20,7 +20,7 @@ export function Cetak({ role }: { role: 'kasir' | 'akuntansi' }) {
   const addr = DEFAULT_FOUNDATION_ADDRESS;
 
   useEffect(() => {
-    fetchTransactions().then(setTxList).catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat data.', 'error')).finally(() => setLoading(false));
+    fetchTransactions({ roles: role === 'kasir' ? 'Kasir' : 'Kasir,Akuntansi' }).then(setTxList).catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat data.', 'error')).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

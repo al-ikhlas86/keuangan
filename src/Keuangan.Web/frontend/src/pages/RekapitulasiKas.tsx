@@ -9,7 +9,7 @@ import { fetchCashRecap, saveOpeningBalance, ApiError, type CashRecapDto } from 
 import { fmt, monthNamesFullId, formatTanggalPanjang } from '../lib/format';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS, KWITANSI_ORG_CITY } from '../lib/consts';
 
-function SaldoAwalForm({ onDone }: { onDone: () => void }) {
+function SaldoAwalForm({ onDone, scope }: { onDone: () => void; scope?: string }) {
   const { tt } = useI18n();
   const { showToast } = useToast();
   const [nominal, setNominal] = useState('0');
@@ -18,7 +18,7 @@ function SaldoAwalForm({ onDone }: { onDone: () => void }) {
     const amount = parseInt(nominal, 10);
     if (Number.isNaN(amount)) { showToast(tt('msg.nominalTidakValid'), 'error'); return; }
     try {
-      await saveOpeningBalance(amount);
+      await saveOpeningBalance(amount, scope);
       showToast(tt('msg.berhasil'));
       onDone();
     } catch (err) {
@@ -40,7 +40,9 @@ function SaldoAwalForm({ onDone }: { onDone: () => void }) {
   );
 }
 
-export function RekapitulasiKas() {
+// forcedRole="Staff": buku kas Admin Keuangan (transaksi buatan Admin Keuangan saja, saldo awal sendiri). Peran Staff
+// otomatis memakai lingkup ini; Admin melihat buku kas gabungan atau membuka versi Staff lewat menu laporan admin.
+export function RekapitulasiKas({ forcedRole = null }: { forcedRole?: 'Staff' | null } = {}) {
   const { tt } = useI18n();
   const { role } = useRole();
   const { showToast } = useToast();
@@ -51,15 +53,17 @@ export function RekapitulasiKas() {
   const [error, setError] = useState<string | null>(null);
   const [showSaldoForm, setShowSaldoForm] = useState(false);
   const isAdmin = role === 'AdminManager';
+  const scopeRole = forcedRole || (role === 'Staff' ? 'Staff' : undefined);
+  const heading = scopeRole === 'Staff' ? tt('menu.rekapKasAdminKeuangan') : tt('heading.rekapitulasiKas');
 
   useEffect(() => {
     let cancelled = false;
     const periodKey = `${year}-${String(month).padStart(2, '0')}`;
-    fetchCashRecap(periodKey)
+    fetchCashRecap(periodKey, scopeRole)
       .then((d) => { if (!cancelled) { setRecap(d); setError(null); } })
       .catch((err) => { if (!cancelled) setError(err instanceof ApiError ? err.message : 'Gagal memuat rekap kas.'); });
     return () => { cancelled = true; };
-  }, [year, month]);
+  }, [year, month, scopeRole]);
 
   const name = DEFAULT_FOUNDATION_NAME;
   const addr = DEFAULT_FOUNDATION_ADDRESS;
@@ -69,7 +73,7 @@ export function RekapitulasiKas() {
   function onSaldoSaved() {
     setShowSaldoForm(false);
     const periodKey = `${year}-${String(month).padStart(2, '0')}`;
-    fetchCashRecap(periodKey).then(setRecap).catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat ulang rekap.', 'error'));
+    fetchCashRecap(periodKey, scopeRole).then(setRecap).catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat ulang rekap.', 'error'));
   }
 
   return (
@@ -83,10 +87,10 @@ export function RekapitulasiKas() {
         </div>
         <div className="flex gap-2">
           {isAdmin && <button onClick={() => setShowSaldoForm((v) => !v)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-dark-900 border border-gray-700 text-gray-400 hover:text-white text-xs font-medium"><Pencil className="w-3.5 h-3.5" />{tt('misc.saldoAwalPencatatan')}</button>}
-          <PrintBtn label={tt('heading.rekapitulasiKas')} />
+          <PrintBtn label={heading} />
         </div>
       </div>
-      {showSaldoForm && <div className="no-print"><SaldoAwalForm onDone={onSaldoSaved} /></div>}
+      {showSaldoForm && <div className="no-print"><SaldoAwalForm scope={scopeRole} onDone={onSaldoSaved} /></div>}
       <div className="print-sheet bg-dark-800 rounded-xl border border-gray-700/50 p-6">
         {error ? (
           <p className="text-xs text-red-400 py-8 text-center">{error}</p>
@@ -97,7 +101,7 @@ export function RekapitulasiKas() {
             <div className="text-center mb-6 border-b border-gray-700/50 pb-4">
               <h2 className="text-lg font-bold text-white">{name}</h2>
               <p className="text-[10px] text-gray-500">{addr}</p>
-              <p className="text-sm font-semibold text-brand-400 mt-1">{tt('heading.rekapitulasiKas').toUpperCase()}</p>
+              <p className="text-sm font-semibold text-brand-400 mt-1">{heading.toUpperCase()}</p>
               <p className="text-[10px] text-gray-500">{tt('misc.periode')}: {bulanLabel} {year}</p>
             </div>
             <div className="overflow-x-auto">

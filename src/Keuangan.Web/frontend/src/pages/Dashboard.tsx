@@ -9,6 +9,7 @@ import { ExportBtn } from '../components/Buttons';
 import { KwitansiBtn } from '../components/Buttons';
 import { fmt, computeMonthlyTrend, downloadCsv } from '../lib/format';
 import { fetchTransactions, fetchStudents, fetchTagihan, ApiError, type TransactionDto } from '../api';
+import { scopeRolesFor } from '../lib/scope';
 
 // Mirror renderDashboard() lama, diporting ulang total ke Fase 1: tanpa data
 // Pegawai/Penggajian (Fase 2, lihat plan) - ringkasan siswa dipangkas jadi
@@ -31,7 +32,7 @@ export function Dashboard() {
       setLoading(true);
       try {
         const tasks: Promise<void>[] = [
-          fetchTransactions().then((t) => { if (!cancelled) setTransactions(t); }),
+          fetchTransactions({ roles: scopeRolesFor(role) }).then((t) => { if (!cancelled) setTransactions(t); }),
         ];
         if (showSiswaStats) {
           tasks.push(fetchStudents().then((s) => { if (!cancelled) setStudentCount(s.length); }));

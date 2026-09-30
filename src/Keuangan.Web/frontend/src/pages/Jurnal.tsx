@@ -4,6 +4,8 @@ import { useToast } from '../contexts/ToastContext';
 import { ExportBtn, PrintBtn } from '../components/Buttons';
 import { fmt, downloadCsv } from '../lib/format';
 import { fetchTransactions, fetchTransactionDetail, ApiError, type TransactionDto, type TransactionDetailDto } from '../api';
+import { useRole } from '../contexts/RoleContext';
+import { scopeRolesFor } from '../lib/scope';
 
 // Disederhanakan Fase 1: TIDAK ada lagi scoping "akuntansi lihat jurnal
 // kasir+akuntansi" (source_role per transaksi tidak dilacak lagi di backend)
@@ -12,7 +14,9 @@ import { fetchTransactions, fetchTransactionDetail, ApiError, type TransactionDt
 // nyata (Penerimaan/Pengeluaran/Terima Pembayaran), halaman ini murni buku
 // besar baca-saja. Baris jurnal per transaksi di-load sekali di awal
 // (N+1 fetch kecil, wajar utk ukuran data 1 yayasan).
-export function Jurnal() {
+// forcedRoles: daftar peran pembuat (menu Jurnal Akuntansi utk Admin = "Kasir,Akuntansi"); kosong = ikut lingkup peran yang login.
+export function Jurnal({ forcedRoles }: { forcedRoles?: string } = {}) {
+  const { role } = useRole();
   const { tt } = useI18n();
   const { showToast } = useToast();
   const [rows, setRows] = useState<{ tx: TransactionDto; detail: TransactionDetailDto }[]>([]);
@@ -23,7 +27,7 @@ export function Jurnal() {
     async function load() {
       setLoading(true);
       try {
-        const list = await fetchTransactions();
+        const list = await fetchTransactions({ roles: forcedRoles ?? scopeRolesFor(role) });
         const details = await Promise.all(list.map((t) => fetchTransactionDetail(t.id)));
         if (!cancelled) setRows(list.map((tx, i) => ({ tx, detail: details[i] })));
       } catch (err) {

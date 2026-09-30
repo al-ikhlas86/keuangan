@@ -20,9 +20,12 @@ public static class TransactionsEndpoints
     {
         var group = app.MapGroup("/api/transactions").RequireAuthorization();
 
-        group.MapGet("/", async (DateOnly? dari, DateOnly? sampai, TxType? txType, KeuanganDbContext db) =>
+        // roles = daftar peran PEMBUAT transaksi dipisah koma (mis. "Kasir,Akuntansi") - dipakai laporan per peran
+        // (Laporan Kasir, Jurnal Akuntansi, buku kas Admin Keuangan). Kosong = semua transaksi.
+        group.MapGet("/", async (DateOnly? dari, DateOnly? sampai, TxType? txType, string? roles, KeuanganDbContext db) =>
         {
             var query = db.FinancialTransactions.AsQueryable();
+            if (TransactionScope.Parse(roles) is { } peran) query = query.Where(t => t.CreatedByUser != null && peran.Contains(t.CreatedByUser.Role));
             if (dari is not null) query = query.Where(t => t.TxDate >= dari);
             if (sampai is not null) query = query.Where(t => t.TxDate <= sampai);
             if (txType is not null) query = query.Where(t => t.TxType == txType);
@@ -32,6 +35,7 @@ public static class TransactionsEndpoints
                 {
                     t.Id, t.TxCode, t.TxDate, t.Description, TxType = t.TxType.ToString(), PaymentMethod = t.PaymentMethod.ToString(),
                     t.Amount, StudentName = t.Student != null ? t.Student.Name : null, FeeTypeName = t.FeeType != null ? t.FeeType.Name : null,
+                    CreatedByRole = t.CreatedByUser != null ? t.CreatedByUser.Role.ToString() : null,
                 })
                 .ToListAsync();
             return Results.Ok(new { success = true, data });
@@ -115,6 +119,18 @@ public static class TransactionsEndpoints
 
             return Results.Ok(new { success = true, data = new { transaction.Id, transaction.TxCode, journalEntry.EntryNo } });
         });
+    }
+}
+
+public static class TransactionScope
+{
+    // "Kasir,Akuntansi" -> [Kasir, Akuntansi]; kosong/tidak valid -> null (tanpa filter).
+    public static List<UserRole>? Parse(string? roles)
+    {
+        if (string.IsNullOrWhiteSpace(roles)) return null;
+        var list = roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(r => Enum.TryParse<UserRole>(r, true, out var v) ? (UserRole?)v : null).Where(v => v is not null).Select(v => v!.Value).ToList();
+        return list.Count == 0 ? null : list;
     }
 }
 

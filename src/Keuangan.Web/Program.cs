@@ -76,6 +76,9 @@ var app = builder.Build();
 // (Migrate() idempotent per-migrasi, aman dipanggil tiap start termasuk
 // tiap kali auto-update selesai) - PC sekolah TIDAK PERNAH perlu jalankan
 // migration tool manual.
+// Pemulihan backup yang menunggu (diunggah lewat Manajemen Data) - diterapkan SEBELUM database dipakai.
+DatabaseFiles.ApplyPendingRestore(DatabaseFiles.ResolveDbPath(app.Configuration), app.Logger);
+
 using (var scope = app.Services.CreateScope())
 {
     var startupDb = scope.ServiceProvider.GetRequiredService<KeuanganDbContext>();
@@ -108,6 +111,7 @@ app.MapStudentsEndpoints();
 app.MapVaEndpoints();
 app.MapPayrollEndpoints();
 app.MapValidationEndpoints();
+app.MapManagementEndpoints();
 app.MapEmployeesEndpoints();
 app.MapSyncEndpoints();
 app.MapFeeTypesEndpoints();

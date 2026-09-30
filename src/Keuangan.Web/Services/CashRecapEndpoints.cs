@@ -15,7 +15,7 @@ public static class CashRecapEndpoints
 {
     public static void MapCashRecapEndpoints(this WebApplication app)
     {
-        app.MapGet("/api/cash-recap", async (string periodKey, KeuanganDbContext db) =>
+        app.MapGet("/api/cash-recap", async (string periodKey, string? roles, KeuanganDbContext db) =>
         {
             var parts = periodKey.Split('-');
             if (parts.Length != 2 || !int.TryParse(parts[0], out var year) || !int.TryParse(parts[1], out var month) || month is < 1 or > 12)
@@ -24,19 +24,24 @@ public static class CashRecapEndpoints
             var fromDate = new DateOnly(year, month, 1);
             var toDate = fromDate.AddMonths(1).AddDays(-1);
 
-            var openingSetting = await db.SystemSettings.FindAsync("opening_cash_balance");
+            // Buku kas per peran (mis. Admin Keuangan) punya saldo pembuka sendiri & hanya menghitung transaksi buatan peran itu.
+            var peran = TransactionScope.Parse(roles);
+            var scoped = peran is not null;
+            var openingKey = scoped ? "staff_cash_opening_balance" : "opening_cash_balance";
+            var basis = scoped ? db.FinancialTransactions.Where(t => t.CreatedByUser != null && peran!.Contains(t.CreatedByUser.Role)) : db.FinancialTransactions.AsQueryable();
+            var openingSetting = await db.SystemSettings.FindAsync(openingKey);
             var openingBalance = decimal.TryParse(openingSetting?.SettingValue, out var ob) ? ob : 0m;
 
             // Saldo awal periode INI = saldo pembuka global + semua transaksi
             // SEBELUM tanggal 1 periode ini (bukan cuma dari tanggal saldo
             // pembuka disetel) - supaya rekap bulan manapun konsisten dihitung
             // dari 1 titik referensi yang sama.
-            var totalSebelumPeriode = await db.FinancialTransactions
+            var totalSebelumPeriode = await basis
                 .Where(t => t.TxDate < fromDate)
                 .SumAsync(t => (decimal?)(t.TxType == TxType.Masuk ? t.Amount : -t.Amount)) ?? 0;
             var saldoAwalPeriode = openingBalance + totalSebelumPeriode;
 
-            var transaksi = await db.FinancialTransactions
+            var transaksi = await basis
                 .Where(t => t.TxDate >= fromDate && t.TxDate <= toDate)
                 .OrderBy(t => t.TxDate).ThenBy(t => t.Id)
                 .Select(t => new { t.TxCode, t.TxDate, t.Description, TxType = t.TxType.ToString(), t.Amount })
@@ -67,10 +72,11 @@ public static class CashRecapEndpoints
 
         app.MapPost("/api/settings/opening-balance", async (OpeningBalanceRequest req, KeuanganDbContext db) =>
         {
-            var setting = await db.SystemSettings.FindAsync("opening_cash_balance");
+            var key = string.Equals(req.Scope, "Staff", StringComparison.OrdinalIgnoreCase) ? "staff_cash_opening_balance" : "opening_cash_balance";
+            var setting = await db.SystemSettings.FindAsync(key);
             if (setting is null)
             {
-                db.SystemSettings.Add(new SystemSetting { SettingKey = "opening_cash_balance", SettingValue = req.Amount.ToString(), UpdatedAt = DateTime.UtcNow });
+                db.SystemSettings.Add(new SystemSetting { SettingKey = key, SettingValue = req.Amount.ToString(), UpdatedAt = DateTime.UtcNow });
             }
             else
             {
@@ -83,4 +89,4 @@ public static class CashRecapEndpoints
     }
 }
 
-public record OpeningBalanceRequest(decimal Amount);
+public record OpeningBalanceRequest(decimal Amount, string? Scope);

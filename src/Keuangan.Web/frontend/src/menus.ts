@@ -20,6 +20,9 @@ export const menus: Record<RoleKey, MenuItem[]> = {
       { icon: 'arrow-up-circle', label: 'menu.pengeluaran', page: 'pengeluaran' },
       { icon: 'landmark', label: 'menu.rekonsiliasi_bank', page: 'rekonsiliasi_bank' },
       { icon: 'printer', label: 'menu.rekapitulasi_kas', page: 'rekapitulasi_kas' },
+      { icon: 'wallet', label: 'menu.rekapKasAdminKeuangan', page: 'rekap_kas_staff' },
+      { icon: 'printer', label: 'menu.laporanKasirOversight', page: 'laporan_kasir_admin' },
+      { icon: 'book-open', label: 'menu.jurnalAkuntansiOversight', page: 'jurnal_akuntansi_admin' },
     ] },
     { icon: 'users', label: 'menu.pegawai_group', group: true, key: 'pegawai', children: [
       { icon: 'users', label: 'menu.pegawai', page: 'pegawai' },
@@ -47,6 +50,8 @@ export const menus: Record<RoleKey, MenuItem[]> = {
     ] },
     { icon: 'user-cog', label: 'menu.kelola_pengguna', page: 'kelola_pengguna' },
     { icon: 'landmark', label: 'menu.bagan_akun', page: 'bagan_akun' },
+    { icon: 'database', label: 'menu.manajemen', page: 'manajemen' },
+    { icon: 'shield-check', label: 'menu.riwayat_audit', page: 'audit' },
     { icon: 'settings', label: 'menu.pengaturan', page: 'pengaturan' },
   ],
   Staff: [
@@ -122,6 +127,7 @@ export const titleKeys: Record<string, string> = {
   siswa_detail: 'heading.profilSiswa', kwitansi: 'heading.kwitansi',
   rekapitulasi_kas: 'menu.rekapitulasi_kas',
   jenis_pembayaran: 'menu.jenis_pembayaran',
+  manajemen: 'menu.manajemen', audit: 'menu.riwayat_audit', rekap_kas_staff: 'menu.rekapKasAdminKeuangan', laporan_kasir_admin: 'menu.laporanKasirOversight', jurnal_akuntansi_admin: 'menu.jurnalAkuntansiOversight',
   validasi_pembayaran: 'menu.validasi_pembayaran', rekonsiliasi_bank: 'menu.rekonsiliasi_bank',
   pajak: 'menu.pajak', bpjs_tk: 'menu.bpjsTk', bpjs_k: 'menu.bpjsK', kelola_komponen_pajak_bpjs: 'menu.kelolaKomponenPajakBpjs',
   pegawai: 'menu.pegawai', pegawai_detail: 'heading.profilPegawai', arsip_pegawai: 'menu.arsip_pegawai', penggajian: 'menu.penggajian',

@@ -275,15 +275,16 @@ export type TxType = 'Masuk' | 'Keluar';
 export type PaymentMethod = 'Cash' | 'Transfer';
 export interface TransactionDto {
   id: number; txCode: string; txDate: string; description: string; txType: TxType; paymentMethod: PaymentMethod;
-  amount: number; studentName: string | null; feeTypeName: string | null;
+  amount: number; studentName: string | null; feeTypeName: string | null; createdByRole?: string | null;
 }
 export interface JournalLineViewDto { accountId: number; accountName: string; debit: number; credit: number }
 export interface TransactionDetailDto {
   id: number; txCode: string; txDate: string; description: string; txType: TxType; paymentMethod: PaymentMethod;
   amount: number; studentId: number | null; feeTypeId: number | null; senderNote: string | null; journalLines: JournalLineViewDto[];
 }
-export function fetchTransactions(params?: { dari?: string; sampai?: string; txType?: TxType }) {
+export function fetchTransactions(params?: { dari?: string; sampai?: string; txType?: TxType; roles?: string }) {
   const qs = new URLSearchParams();
+  if (params?.roles) qs.set('roles', params.roles);
   if (params?.dari) qs.set('dari', params.dari);
   if (params?.sampai) qs.set('sampai', params.sampai);
   if (params?.txType) qs.set('txType', params.txType);
@@ -330,11 +331,11 @@ export interface CashRecapRowDto { txCode: string; txDate: string; description: 
 export interface CashRecapDto {
   periodKey: string; saldoAwalPeriode: number; saldoAkhirPeriode: number; totalMasuk: number; totalKeluar: number; baris: CashRecapRowDto[];
 }
-export function fetchCashRecap(periodKey: string) {
-  return apiFetch<CashRecapDto>(`/api/cash-recap?periodKey=${encodeURIComponent(periodKey)}`);
+export function fetchCashRecap(periodKey: string, roles?: string) {
+  return apiFetch<CashRecapDto>(`/api/cash-recap?periodKey=${encodeURIComponent(periodKey)}${roles ? `&roles=${encodeURIComponent(roles)}` : ''}`);
 }
-export function saveOpeningBalance(amount: number) {
-  return apiFetch<{ message: string }>('/api/settings/opening-balance', { method: 'POST', body: JSON.stringify({ amount }) });
+export function saveOpeningBalance(amount: number, scope?: string) {
+  return apiFetch<{ message: string }>('/api/settings/opening-balance', { method: 'POST', body: JSON.stringify({ amount, scope }) });
 }
 
 // ============================================================================
@@ -596,4 +597,44 @@ export function deleteBankLine(id: number) {
 }
 export function matchBankLine(id: number, transactionId: number | null) {
   return apiFetch<{ matched: boolean }>(`/api/bank-lines/${id}/match`, { method: 'POST', body: JSON.stringify({ transactionId }) });
+}
+
+// ============================================================================
+// Manajemen Data (backup/pulihkan) & Riwayat Audit (2026-09-30) - lihat ManagementEndpoints.cs.
+// ============================================================================
+export interface ManagementSummary {
+  siswaAktif: number; pegawaiAktif: number; transaksi: number; tagihan: number; ukuranDatabaseBytes: number;
+  backupTerakhir: string | null; jumlahBackup: number; pemulihanMenunggu: boolean;
+}
+export interface BackupInfo { name: string; ukuran: number; dibuat: string }
+export function fetchManagementSummary() { return apiFetch<ManagementSummary>('/api/management/summary'); }
+export function fetchBackups() { return apiFetch<BackupInfo[]>('/api/management/backups'); }
+export function createBackup() { return apiFetch<{ name: string; ukuran: number }>('/api/management/backups', { method: 'POST' }); }
+export function deleteBackup(name: string) { return apiFetch<null>(`/api/management/backups/${encodeURIComponent(name)}`, { method: 'DELETE' }); }
+export async function downloadBackup(name: string) {
+  const res = await apiRaw(`/api/management/backups/${encodeURIComponent(name)}`, { method: 'GET' });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+export async function uploadRestore(file: File): Promise<string> {
+  const r = await apiUpload<{ message: string }>('/api/management/restore', file);
+  return r.message;
+}
+export function cancelRestore() { return apiFetch<null>('/api/management/restore', { method: 'DELETE' }); }
+
+export interface AuditLogItem {
+  id: number; auditCode: string; module: string; action: string; entityName: string; entityCode: string | null; createdAt: string;
+  actor: string; actorRole: string; beforeDataJson: string | null; afterDataJson: string | null;
+}
+export interface AuditLogResult { total: number; perPeran: { peran: string; jumlah: number }[]; items: AuditLogItem[] }
+export function fetchAuditLogs(params?: { module?: string; action?: string }) {
+  const qs = new URLSearchParams();
+  if (params?.module) qs.set('module', params.module);
+  if (params?.action) qs.set('action', params.action);
+  const s = qs.toString();
+  return apiFetch<AuditLogResult>(`/api/audit-logs${s ? `?${s}` : ''}`);
 }

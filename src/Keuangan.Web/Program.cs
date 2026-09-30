@@ -78,7 +78,10 @@ var app = builder.Build();
 // migration tool manual.
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<KeuanganDbContext>().Database.Migrate();
+    var startupDb = scope.ServiceProvider.GetRequiredService<KeuanganDbContext>();
+    startupDb.Database.Migrate();
+    // Data awal penggajian (komponen gaji, template slip) - hanya kalau masih kosong.
+    PayrollSeeder.SeedAsync(startupDb).GetAwaiter().GetResult();
 }
 
 // Serve hasil build React (Keuangan.Web/frontend -> wwwroot, lihat
@@ -103,6 +106,7 @@ app.MapUsersEndpoints();
 app.MapChartOfAccountsEndpoints();
 app.MapStudentsEndpoints();
 app.MapVaEndpoints();
+app.MapPayrollEndpoints();
 app.MapEmployeesEndpoints();
 app.MapSyncEndpoints();
 app.MapFeeTypesEndpoints();

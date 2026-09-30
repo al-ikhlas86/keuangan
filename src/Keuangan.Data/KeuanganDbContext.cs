@@ -17,6 +17,16 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
     public DbSet<PaymentReference> PaymentReferences => Set<PaymentReference>();
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<PayrollComponentGroup> PayrollComponentGroups => Set<PayrollComponentGroup>();
+    public DbSet<PayrollComponentType> PayrollComponentTypes => Set<PayrollComponentType>();
+    public DbSet<PayrollComponentRate> PayrollComponentRates => Set<PayrollComponentRate>();
+    public DbSet<PayrollPeriod> PayrollPeriods => Set<PayrollPeriod>();
+    public DbSet<PayrollItem> PayrollItems => Set<PayrollItem>();
+    public DbSet<PayrollItemLine> PayrollItemLines => Set<PayrollItemLine>();
+    public DbSet<SalarySlip> SalarySlips => Set<SalarySlip>();
+    public DbSet<PayslipTemplateLine> PayslipTemplateLines => Set<PayslipTemplateLine>();
+    public DbSet<PayslipTemplateComponentBinding> PayslipTemplateComponentBindings => Set<PayslipTemplateComponentBinding>();
+    public DbSet<PayslipTemplateSumBinding> PayslipTemplateSumBindings => Set<PayslipTemplateSumBinding>();
     public DbSet<StudentVirtualAccount> StudentVirtualAccounts => Set<StudentVirtualAccount>();
     public DbSet<FeeType> FeeTypes => Set<FeeType>();
     public DbSet<FeeTypeRate> FeeTypeRates => Set<FeeTypeRate>();
@@ -161,5 +171,49 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
 
         // --- SystemSetting ---
         b.Entity<SystemSetting>().HasKey(s => s.SettingKey);
+
+        // --- Penggajian (lihat Entities/Payroll.cs) ---
+        b.Entity<PayrollComponentType>().HasIndex(c => c.Code).IsUnique();
+        b.Entity<PayrollComponentType>().Property(c => c.DefaultRate).HasPrecision(14, 2);
+        b.Entity<PayrollComponentType>()
+            .HasOne(c => c.Group).WithMany().HasForeignKey(c => c.GroupId).OnDelete(DeleteBehavior.SetNull);
+        b.Entity<PayrollComponentRate>().HasIndex(r => new { r.ComponentTypeId, r.EducationLevel }).IsUnique();
+        b.Entity<PayrollComponentRate>().Property(r => r.Rate).HasPrecision(14, 2);
+        b.Entity<PayrollComponentRate>()
+            .HasOne(r => r.ComponentType).WithMany(c => c.Rates).HasForeignKey(r => r.ComponentTypeId).OnDelete(DeleteBehavior.Cascade);
+
+        b.Entity<PayrollPeriod>().HasIndex(p => p.PeriodKey).IsUnique();
+        b.Entity<PayrollItem>().HasIndex(i => new { i.PayrollPeriodId, i.EmployeeId }).IsUnique();
+        b.Entity<PayrollItem>().Property(i => i.BiayaJabatan).HasPrecision(14, 2);
+        b.Entity<PayrollItem>().Property(i => i.PtkpWajibPajak).HasPrecision(14, 2);
+        b.Entity<PayrollItem>().Property(i => i.PajakDitanggungPemerintah).HasPrecision(14, 2);
+        b.Entity<PayrollItem>()
+            .HasOne(i => i.PayrollPeriod).WithMany().HasForeignKey(i => i.PayrollPeriodId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<PayrollItem>()
+            .HasOne(i => i.Employee).WithMany().HasForeignKey(i => i.EmployeeId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<PayrollItem>()
+            .HasOne(i => i.Transaction).WithMany().HasForeignKey(i => i.TransactionId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<PayrollItemLine>().HasIndex(l => new { l.PayrollItemId, l.ComponentTypeId }).IsUnique();
+        b.Entity<PayrollItemLine>().Property(l => l.Amount).HasPrecision(14, 2);
+        b.Entity<PayrollItemLine>().Property(l => l.Quantity).HasPrecision(14, 2);
+        b.Entity<PayrollItemLine>()
+            .HasOne(l => l.PayrollItem).WithMany(i => i.Lines).HasForeignKey(l => l.PayrollItemId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<PayrollItemLine>()
+            .HasOne(l => l.ComponentType).WithMany().HasForeignKey(l => l.ComponentTypeId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<SalarySlip>().HasIndex(s => s.SlipNo).IsUnique();
+        b.Entity<SalarySlip>().HasIndex(s => s.PayrollItemId).IsUnique();
+        b.Entity<SalarySlip>()
+            .HasOne(s => s.PayrollItem).WithOne(i => i.Slip).HasForeignKey<SalarySlip>(s => s.PayrollItemId).OnDelete(DeleteBehavior.Cascade);
+
+        b.Entity<PayslipTemplateComponentBinding>()
+            .HasOne(x => x.Line).WithMany(l => l.ComponentBindings).HasForeignKey(x => x.LineId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<PayslipTemplateComponentBinding>()
+            .HasOne(x => x.ComponentType).WithMany().HasForeignKey(x => x.ComponentTypeId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<PayslipTemplateSumBinding>()
+            .HasOne(x => x.Line).WithMany(l => l.SumBindings).HasForeignKey(x => x.LineId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<PayslipTemplateSumBinding>()
+            .HasOne(x => x.SourceLine).WithMany().HasForeignKey(x => x.SourceLineId).OnDelete(DeleteBehavior.Restrict);
     }
 }

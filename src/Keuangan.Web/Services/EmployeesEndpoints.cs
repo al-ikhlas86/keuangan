@@ -24,7 +24,7 @@ public static class EmployeesEndpoints
             var employees = await query.OrderBy(e => e.Name)
                 .Select(e => new
                 {
-                    e.Id, e.HubId, e.Name, e.Nip, e.Jabatan, e.IsKepalaSekolah,
+                    e.Id, e.HubId, e.Name, e.Nip, e.Jabatan, e.IsKepalaSekolah, e.Tipe, e.Pendidikan,
                     Status = e.Status.ToString(), e.StatusKeluar, e.Katalog, e.SyncedAt,
                 })
                 .ToListAsync();

@@ -6,7 +6,7 @@ export type Role = RoleKey;
 
 // Halaman detail/transien butuh state tambahan (id yang dipilih) yang tidak ikut
 // tersimpan lewat refresh - sama seperti NON_PERSISTABLE_PAGES di index.html:680.
-const NON_PERSISTABLE_PAGES = new Set(['siswa_detail', 'kwitansi']);
+const NON_PERSISTABLE_PAGES = new Set(['siswa_detail', 'pegawai_detail', 'kwitansi']);
 
 interface RoleContextValue {
   role: Role;
@@ -21,6 +21,8 @@ interface RoleContextValue {
   closeKwitansi: () => void;
   siswaDetailId: string | null;
   openStudentProfile: (dbId: string) => void;
+  pegawaiDetailId: string | null;
+  openEmployeeProfile: (dbId: string) => void;
 }
 
 const RoleContext = createContext<RoleContextValue | null>(null);
@@ -54,6 +56,7 @@ export function RoleProvider({ children, forcedRole }: { children: ReactNode; fo
   const [kwitansiTxId, setKwitansiTxId] = useState<string | null>(null);
   const kwitansiReturnPage = useRef<string | null>(null);
   const [siswaDetailId, setSiswaDetailId] = useState<string | null>(null);
+  const [pegawaiDetailId, setPegawaiDetailId] = useState<string | null>(null);
 
   // Akun sungguhan login sbg role X -> paksa role = X, sinkron kalau berubah
   // (mis. admin ganti role akun ybs dari Kelola Pengguna lalu re-login).
@@ -106,13 +109,14 @@ export function RoleProvider({ children, forcedRole }: { children: ReactNode; fo
   }, [navigateTo]);
 
   const openStudentProfile = useCallback((dbId: string) => setSiswaDetailId(dbId), []);
+  const openEmployeeProfile = useCallback((dbId: string) => setPegawaiDetailId(dbId), []);
 
   const value = useMemo(
     () => ({
       role, page, expandedGroups, switchRole, canSwitchRole: !forcedRole, navigateTo, toggleGroup,
-      kwitansiTxId, openKwitansi, closeKwitansi, siswaDetailId, openStudentProfile,
+      kwitansiTxId, openKwitansi, closeKwitansi, siswaDetailId, openStudentProfile, pegawaiDetailId, openEmployeeProfile,
     }),
-    [role, page, expandedGroups, switchRole, forcedRole, navigateTo, toggleGroup, kwitansiTxId, openKwitansi, closeKwitansi, siswaDetailId, openStudentProfile],
+    [role, page, expandedGroups, switchRole, forcedRole, navigateTo, toggleGroup, kwitansiTxId, openKwitansi, closeKwitansi, siswaDetailId, openStudentProfile, pegawaiDetailId, openEmployeeProfile],
   );
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }

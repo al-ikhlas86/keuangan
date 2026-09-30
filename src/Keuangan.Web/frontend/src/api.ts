@@ -169,13 +169,14 @@ export interface StudentDto {
 }
 // ---- Pegawai (identitas READ-ONLY hasil sinkron Webview-App, lihat EmployeesEndpoints.cs) ----
 export type EmployeeStatus = 'Aktif' | 'Nonaktif';
-export interface EmployeeDto {
+export interface EmployeeListDto {
   id: number; hubId: number; name: string; nip: string | null; jabatan: string | null; isKepalaSekolah: boolean;
+  tipe: string; pendidikan: string | null;
   status: EmployeeStatus; statusKeluar: string | null; katalog: string | null; syncedAt: string | null;
 }
 export function fetchEmployees(q?: string) {
   const qs = q ? `?q=${encodeURIComponent(q)}` : '';
-  return apiFetch<EmployeeDto[]>(`/api/employees/${qs}`);
+  return apiFetch<EmployeeListDto[]>(`/api/employees/${qs}`);
 }
 
 // ---- Versi aplikasi (Pengaturan, lihat VersionEndpoints.cs) ----
@@ -335,3 +336,205 @@ export function fetchCashRecap(periodKey: string) {
 export function saveOpeningBalance(amount: number) {
   return apiFetch<{ message: string }>('/api/settings/opening-balance', { method: 'POST', body: JSON.stringify({ amount }) });
 }
+
+// ============================================================================
+// Penggajian (2026-09-30) - port dari Akuntansi. Halaman hasil port memakai bentuk data
+// snake_case ala Akuntansi (db_id, is_active, calc_mode, ...) supaya kodenya nyaris tidak berubah;
+// backend Keuangan (camelCase) dipetakan di SINI. Parameter `role` dipertahankan agar tanda tangan
+// fungsi sama, tapi diabaikan - otorisasi dari login/cookie di server.
+// ============================================================================
+export type CalcMode = 'MANUAL' | 'AUTO_HARI' | 'AUTO_OWN';
+export type SlipSection = 'TETAP' | 'TIDAK_TETAP';
+export type EditRole = 'ALL' | 'SUPERVISOR';
+export type KelompokPajakBpjs = '' | 'PAJAK' | 'BPJS_TK' | 'BPJS_K';
+export interface PayrollComponentTypeDto {
+  db_id: string; code: string; name: string; category: 'EARNING' | 'DEDUCTION'; group_id: string | null;
+  calc_mode: CalcMode; qty_label: string; default_rate: number; short_label: string;
+  slip_section: SlipSection; edit_role: EditRole; kelompok_pajak_bpjs: KelompokPajakBpjs;
+  rates: Record<string, number>; urutan: number; is_active: boolean;
+}
+export interface PayrollComponentGroupDto { db_id: string; name: string; category: 'EARNING' | 'DEDUCTION'; urutan: number; is_active: boolean }
+export interface PayrollLineDto { amount: number; quantity: number | null; is_manual_override: boolean }
+export interface PayrollItemDto {
+  employee_id: string; payroll_item_id: string; hari_masuk: number | null; keterangan: string;
+  biaya_jabatan: number | null; ptkp_wajib_pajak: number | null; pajak_ditanggung_pemerintah: number | null;
+  lines: Record<string, PayrollLineDto>; is_paid: boolean; slip_no?: string | null;
+}
+export interface PayrollItemSingleDto extends PayrollItemDto { ok: boolean; exists: boolean }
+export interface EmployeeDto {
+  db_id: string; id: string; nama: string; jabatan: string; tipe: string; pendidikan: string;
+  nip: string | null; katalog: string | null; is_active: boolean; is_kepala_sekolah: boolean;
+}
+export type PayslipRowType = 'HEADING' | 'COMPONENT_LIST' | 'DATA' | 'TOTAL';
+export type PayslipListKelompok = '' | 'REGULAR' | 'PAJAK_BPJS' | 'PAJAK' | 'BPJS_TK' | 'BPJS_K';
+export interface PayslipSumSourceDto { line_id: string; sign: 1 | -1 }
+export interface PayslipTemplateLineDto {
+  db_id: string; row_type: PayslipRowType; label: string; urutan: number; bold: boolean; indent: boolean;
+  list_category: 'EARNING' | 'DEDUCTION' | ''; list_slip_section: SlipSection | ''; list_kelompok_pajak_bpjs: PayslipListKelompok;
+  is_active: boolean; component_ids: string[]; sum_sources: PayslipSumSourceDto[];
+}
+export interface PayrollSettings { expenseAccountId: number | null; cashAccountId: number | null; signSpv: string | null; signAdm: string | null; taxGuideUrl: string | null }
+export interface PayrollMeta {
+  payroll_component_types: PayrollComponentTypeDto[];
+  payroll_component_groups: PayrollComponentGroupDto[];
+  payslip_template: PayslipTemplateLineDto[];
+  employees: EmployeeDto[];
+  settings: PayrollSettings;
+}
+export interface OfficialDto { name: string; jabatan: string }
+
+const BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+// "September 2026" -> "2026-09" (halaman memakai label bulan, server memakai kunci YYYY-MM).
+export function periodKeyFromLabel(label: string): string {
+  const [bulan, tahun] = label.trim().split(/\s+/);
+  const idx = BULAN_ID.indexOf(bulan);
+  return `${tahun}-${String(idx + 1).padStart(2, '0')}`;
+}
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export async function fetchPayrollMeta(): Promise<PayrollMeta> {
+  const d = await apiFetch<any>('/api/payroll/meta');
+  return {
+    payroll_component_groups: d.groups.map((g: any) => ({ db_id: String(g.id), name: g.name, category: g.category, urutan: g.urutan, is_active: g.isActive })),
+    payroll_component_types: d.types.map((c: any) => ({
+      db_id: String(c.id), code: c.code, name: c.name, category: c.category, group_id: c.groupId != null ? String(c.groupId) : null,
+      calc_mode: c.calcMode, qty_label: c.qtyLabel, default_rate: c.defaultRate, short_label: c.shortLabel, slip_section: c.slipSection,
+      edit_role: c.editRole, kelompok_pajak_bpjs: c.kelompokPajakBpjs, rates: c.rates || {}, urutan: c.urutan, is_active: c.isActive,
+    })),
+    payslip_template: d.template.map((l: any) => ({
+      db_id: String(l.id), row_type: l.rowType, label: l.label, urutan: l.urutan, bold: l.bold, indent: l.indent,
+      list_category: l.listCategory, list_slip_section: l.listSlipSection, list_kelompok_pajak_bpjs: l.listKelompokPajakBpjs, is_active: l.isActive,
+      component_ids: l.componentIds.map(String), sum_sources: l.sumSources.map((s: any) => ({ line_id: String(s.lineId), sign: s.sign })),
+    })),
+    employees: d.employees.map((e: any) => ({
+      db_id: String(e.id), id: e.nip || String(e.id), nama: e.name, jabatan: e.jabatan || '', tipe: e.tipe, pendidikan: e.pendidikan || '',
+      nip: e.nip, katalog: e.katalog, is_active: e.status === 'Aktif', is_kepala_sekolah: e.isKepalaSekolah,
+    })),
+    settings: d.settings ? {
+      expenseAccountId: d.settings.expenseAccountId ?? null, cashAccountId: d.settings.cashAccountId ?? null,
+      signSpv: d.settings.signSpv ?? null, signAdm: d.settings.signAdm ?? null, taxGuideUrl: d.settings.taxGuideUrl ?? null,
+    } : { expenseAccountId: null, cashAccountId: null, signSpv: null, signAdm: null, taxGuideUrl: null },
+  };
+}
+
+function mapItem(i: any): PayrollItemDto {
+  const lines: Record<string, PayrollLineDto> = {};
+  Object.entries(i.lines || {}).forEach(([code, l]: [string, any]) => { lines[code] = { amount: l.amount, quantity: l.quantity ?? null, is_manual_override: !!l.isManualOverride }; });
+  return {
+    employee_id: String(i.employeeId), payroll_item_id: i.payrollItemId != null ? String(i.payrollItemId) : '', hari_masuk: i.hariMasuk ?? null,
+    keterangan: i.keterangan || '', biaya_jabatan: i.biayaJabatan ?? null, ptkp_wajib_pajak: i.ptkpWajibPajak ?? null,
+    pajak_ditanggung_pemerintah: i.pajakDitanggungPemerintah ?? null, lines, is_paid: !!i.isPaid, slip_no: i.slipNo ?? null,
+  };
+}
+
+export async function fetchPayrollItemsList(_role: RoleKey, periodLabel: string) {
+  const d = await apiFetch<any>(`/api/payroll/items?period=${periodKeyFromLabel(periodLabel)}`);
+  return { ok: true, items: (d.items || []).map(mapItem) as PayrollItemDto[] };
+}
+export async function fetchPayrollItemForEmployee(_role: RoleKey, periodLabel: string, employeeId: string): Promise<PayrollItemSingleDto> {
+  const d = await apiFetch<any>(`/api/payroll/items?period=${periodKeyFromLabel(periodLabel)}&employeeId=${employeeId}`);
+  return { ...mapItem({ ...d, employeeId: d.employeeId ?? employeeId }), ok: true, exists: !!d.exists };
+}
+export interface PayrollItemSavePayload {
+  employee_id: string; period_label: string; hari_masuk: number | null; keterangan: string;
+  lines: Record<string, number>; quantities: Record<string, number>; overrides: string[];
+  biaya_jabatan?: number | null; ptkp_wajib_pajak?: number | null; pajak_ditanggung_pemerintah?: number | null;
+}
+export function savePayrollItem(_role: RoleKey, p: PayrollItemSavePayload) {
+  return apiFetch<any>('/api/payroll/items/save', {
+    method: 'POST',
+    body: JSON.stringify({
+      employeeId: Number(p.employee_id), period: periodKeyFromLabel(p.period_label), hariMasuk: p.hari_masuk, keterangan: p.keterangan,
+      lines: p.lines, quantities: p.quantities, overrides: p.overrides,
+      ...(p.biaya_jabatan !== undefined ? { biayaJabatan: p.biaya_jabatan } : {}),
+      ...(p.ptkp_wajib_pajak !== undefined ? { ptkpWajibPajak: p.ptkp_wajib_pajak } : {}),
+      ...(p.pajak_ditanggung_pemerintah !== undefined ? { pajakDitanggungPemerintah: p.pajak_ditanggung_pemerintah } : {}),
+    }),
+  });
+}
+export interface FinalizeOptions { expenseAccountId?: number | null; cashAccountId?: number | null; method?: 'Transfer' | 'Cash' }
+export async function finalizePayrollPeriod(_role: RoleKey, periodLabel: string, employeeIds?: string[], opts: FinalizeOptions = {}) {
+  const d = await apiFetch<any>('/api/payroll/periods/finalize', {
+    method: 'POST',
+    body: JSON.stringify({
+      period: periodKeyFromLabel(periodLabel), employeeIds: employeeIds && employeeIds.length ? employeeIds.map(Number) : undefined,
+      expenseAccountId: opts.expenseAccountId ?? undefined, cashAccountId: opts.cashAccountId ?? undefined, method: opts.method,
+    }),
+  });
+  return { employees_paid: d.employeesPaid as number, total_paid: d.totalPaid as number };
+}
+export async function fetchSalarySlipNo(_role: RoleKey, payrollItemId: string) {
+  const d = await apiFetch<any>(`/api/payroll/items/${payrollItemId}/slip`, { method: 'POST' });
+  return { slip_no: d.slipNo as string };
+}
+export interface PayrollHistoryRow { periodKey: string; periodLabel: string; txDate: string; amount: number; method: string; txCode: string; slipNo: string | null }
+export function fetchPayrollHistory(employeeId: string) {
+  return apiFetch<PayrollHistoryRow[]>(`/api/payroll/employees/${employeeId}/history`);
+}
+
+export interface PayrollComponentTypeInput {
+  code?: string; name: string; category: 'EARNING' | 'DEDUCTION'; group_id?: string | null; calc_mode: CalcMode;
+  qty_label?: string; default_rate?: number; short_label?: string; slip_section?: SlipSection; edit_role?: EditRole;
+  kelompok_pajak_bpjs?: KelompokPajakBpjs; urutan?: number;
+}
+function camelType(i: Record<string, unknown>) {
+  const map: Record<string, string> = {
+    group_id: 'groupId', calc_mode: 'calcMode', qty_label: 'qtyLabel', default_rate: 'defaultRate', short_label: 'shortLabel',
+    slip_section: 'slipSection', edit_role: 'editRole', kelompok_pajak_bpjs: 'kelompokPajakBpjs', is_active: 'isActive',
+  };
+  const out: Record<string, unknown> = {};
+  Object.entries(i).forEach(([k, v]) => { out[map[k] || k] = k === 'group_id' && v != null ? Number(v) : v; });
+  return out;
+}
+export function createPayrollComponentType(_role: RoleKey, input: PayrollComponentTypeInput) {
+  return apiFetch<any>('/api/payroll/component-types', { method: 'POST', body: JSON.stringify(camelType(input as unknown as Record<string, unknown>)) });
+}
+export function updatePayrollComponentType(_role: RoleKey, dbId: string, input: Partial<PayrollComponentTypeInput> & { rates?: Record<string, number | null>; is_active?: boolean }) {
+  return apiFetch<any>(`/api/payroll/component-types/${dbId}`, { method: 'PATCH', body: JSON.stringify(camelType(input as Record<string, unknown>)) });
+}
+export function deactivatePayrollComponentType(role: RoleKey, dbId: string) {
+  return updatePayrollComponentType(role, dbId, { is_active: false });
+}
+export async function createPayrollComponentGroup(_role: RoleKey, name: string, category: 'EARNING' | 'DEDUCTION') {
+  const d = await apiFetch<any>('/api/payroll/component-groups', { method: 'POST', body: JSON.stringify({ name, category }) });
+  return { db_id: String(d.id) };
+}
+export function updatePayrollComponentGroup(_role: RoleKey, dbId: string, input: { name?: string; urutan?: number }) {
+  return apiFetch<any>(`/api/payroll/component-groups/${dbId}`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+export function deactivatePayrollComponentGroup(_role: RoleKey, dbId: string) {
+  return apiFetch<any>(`/api/payroll/component-groups/${dbId}`, { method: 'PATCH', body: JSON.stringify({ isActive: false }) });
+}
+
+export interface PayslipTemplateLineInput {
+  row_type: PayslipRowType; label: string; urutan: number; bold?: boolean; indent?: boolean;
+  list_category?: 'EARNING' | 'DEDUCTION'; list_slip_section?: SlipSection | ''; list_kelompok_pajak_bpjs?: PayslipListKelompok;
+  component_ids?: string[]; sum_sources?: PayslipSumSourceDto[];
+}
+function camelLine(i: Record<string, any>) {
+  const out: Record<string, unknown> = {};
+  if ('row_type' in i) out.rowType = i.row_type;
+  ['label', 'urutan', 'bold', 'indent'].forEach((k) => { if (k in i) out[k] = i[k]; });
+  if ('list_category' in i) out.listCategory = i.list_category;
+  if ('list_slip_section' in i) out.listSlipSection = i.list_slip_section ?? '';
+  if ('list_kelompok_pajak_bpjs' in i) out.listKelompokPajakBpjs = i.list_kelompok_pajak_bpjs;
+  if (i.component_ids) out.componentIds = i.component_ids.map(Number);
+  if (i.sum_sources) out.sumSources = i.sum_sources.map((s: PayslipSumSourceDto) => ({ lineId: Number(s.line_id), sign: s.sign }));
+  return out;
+}
+export function createPayslipTemplateLine(_role: RoleKey, input: PayslipTemplateLineInput) {
+  return apiFetch<any>('/api/payroll/template/', { method: 'POST', body: JSON.stringify(camelLine(input as unknown as Record<string, unknown>)) });
+}
+export function updatePayslipTemplateLine(_role: RoleKey, dbId: string, input: Partial<PayslipTemplateLineInput>) {
+  return apiFetch<any>(`/api/payroll/template/${dbId}`, { method: 'PATCH', body: JSON.stringify(camelLine(input as unknown as Record<string, unknown>)) });
+}
+export function deletePayslipTemplateLine(_role: RoleKey, dbId: string) {
+  return apiFetch<any>(`/api/payroll/template/${dbId}`, { method: 'DELETE' });
+}
+export function savePayrollSettings(input: Partial<PayrollSettings>) {
+  return apiFetch<null>('/api/payroll/settings', { method: 'PUT', body: JSON.stringify(input) });
+}
+export function updateEmployeeRincianGaji(id: string, input: { tipe?: string; pendidikan?: string }) {
+  return apiFetch<null>(`/api/employees/${id}/rincian-gaji`, { method: 'PATCH', body: JSON.stringify(input) });
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { I18nProvider } from './contexts/I18nContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RoleProvider } from './contexts/RoleContext';
+import { BootstrapProvider } from './contexts/BootstrapContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { DeleteModalProvider } from './contexts/DeleteModalContext';
@@ -53,7 +54,9 @@ function AuthGate() {
       <ToastProvider>
         <DeleteModalProvider>
           <PeriodFilterProvider>
-            <Shell />
+            <BootstrapProvider>
+              <Shell />
+            </BootstrapProvider>
           </PeriodFilterProvider>
         </DeleteModalProvider>
       </ToastProvider>

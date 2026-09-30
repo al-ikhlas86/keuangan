@@ -3,6 +3,8 @@ import { useI18n } from '../contexts/I18nContext';
 import { useAuth } from '../contexts/AuthContext';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS } from '../lib/consts';
 import { fetchVersionInfo, type VersionInfoDto } from '../api';
+import { PayrollSettingsCard } from '../components/PayrollSettingsCard';
+import { useRole } from '../contexts/RoleContext';
 
 // Disederhanakan total Fase 1: Info Yayasan (nama/alamat) tetap statis dari
 // lib/consts.ts (SAMA seperti Akuntansi lama - form "simpan"-nya di sana
@@ -15,6 +17,7 @@ import { fetchVersionInfo, type VersionInfoDto } from '../api';
 export function Pengaturan() {
   const { tt } = useI18n();
   const { mode, user } = useAuth();
+  const { role } = useRole();
   const [health, setHealth] = useState<{ service: string } | null>(null);
   const [ver, setVer] = useState<VersionInfoDto | null>(null);
   const [verState, setVerState] = useState<'muat' | 'ok' | 'tidak_ada'>('muat');
@@ -40,6 +43,7 @@ export function Pengaturan() {
 
   return (
     <div className="max-w-2xl space-y-4">
+      {role === 'AdminManager' && <PayrollSettingsCard />}
       <div className="bg-dark-800 rounded-xl border border-gray-700/50 p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold text-white">Versi Aplikasi</h3>

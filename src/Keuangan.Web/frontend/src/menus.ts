@@ -20,6 +20,21 @@ export const menus: Record<RoleKey, MenuItem[]> = {
       { icon: 'arrow-up-circle', label: 'menu.pengeluaran', page: 'pengeluaran' },
       { icon: 'printer', label: 'menu.rekapitulasi_kas', page: 'rekapitulasi_kas' },
     ] },
+    { icon: 'users', label: 'menu.pegawai_group', group: true, key: 'pegawai', children: [
+      { icon: 'users', label: 'menu.pegawai', page: 'pegawai' },
+      { icon: 'wallet', label: 'menu.penggajian', page: 'penggajian' },
+      { icon: 'sliders-horizontal', label: 'menu.kelolaKomponenGaji', page: 'kelola_komponen_gaji' },
+      { icon: 'layout-template', label: 'menu.kelolaSlipGaji', page: 'kelola_slip_gaji' },
+      { icon: 'banknote', label: 'menu.bayarGaji', page: 'bayar_gaji' },
+      { icon: 'activity', label: 'menu.performa', page: 'performa' },
+      { icon: 'archive', label: 'menu.arsip_pegawai', page: 'arsip_pegawai' },
+    ] },
+    { icon: 'shield-check', label: 'menu.pajakBpjsGroup', group: true, key: 'pajak_bpjs_group', children: [
+      { icon: 'receipt', label: 'menu.pajak', page: 'pajak' },
+      { icon: 'hard-hat', label: 'menu.bpjsTk', page: 'bpjs_tk' },
+      { icon: 'heart-pulse', label: 'menu.bpjsK', page: 'bpjs_k' },
+      { icon: 'sliders-horizontal', label: 'menu.kelolaKomponenPajakBpjs', page: 'kelola_komponen_pajak_bpjs' },
+    ] },
     { icon: 'graduation-cap', label: 'menu.siswa_group', group: true, key: 'siswa_group', children: [
       { icon: 'graduation-cap', label: 'menu.siswa', page: 'siswa' },
       { icon: 'file-text', label: 'menu.tagihan', page: 'tagihan_pembayaran' },
@@ -28,7 +43,6 @@ export const menus: Record<RoleKey, MenuItem[]> = {
       { icon: 'archive', label: 'menu.arsip_siswa', page: 'arsip_siswa' },
       { icon: 'receipt', label: 'menu.jenis_pembayaran', page: 'jenis_pembayaran' },
     ] },
-    { icon: 'users', label: 'menu.pegawai', page: 'pegawai' },
     { icon: 'user-cog', label: 'menu.kelola_pengguna', page: 'kelola_pengguna' },
     { icon: 'landmark', label: 'menu.bagan_akun', page: 'bagan_akun' },
     { icon: 'settings', label: 'menu.pengaturan', page: 'pengaturan' },
@@ -38,6 +52,14 @@ export const menus: Record<RoleKey, MenuItem[]> = {
     { icon: 'arrow-down-circle', label: 'menu.penerimaan_kas', page: 'penerimaan_kas' },
     { icon: 'arrow-up-circle', label: 'menu.pengeluaran', page: 'pengeluaran' },
     { icon: 'printer', label: 'menu.rekapitulasi_kas', page: 'rekapitulasi_kas' },
+    { icon: 'users', label: 'menu.pegawai_group', group: true, key: 'pegawai', children: [
+      { icon: 'users', label: 'menu.pegawai', page: 'pegawai' },
+      { icon: 'wallet', label: 'menu.penggajian', page: 'penggajian' },
+      { icon: 'sliders-horizontal', label: 'menu.kelolaKomponenGaji', page: 'kelola_komponen_gaji' },
+      { icon: 'banknote', label: 'menu.bayarGaji', page: 'bayar_gaji' },
+      { icon: 'activity', label: 'menu.performa', page: 'performa' },
+      { icon: 'archive', label: 'menu.arsip_pegawai', page: 'arsip_pegawai' },
+    ] },
     { icon: 'settings', label: 'menu.pengaturan', page: 'pengaturan' },
   ],
   Kasir: [
@@ -73,7 +95,6 @@ export const menus: Record<RoleKey, MenuItem[]> = {
       { icon: 'history', label: 'menu.jurnal_penerimaan_cash', page: 'jurnal_penerimaan_cash' },
       { icon: 'history', label: 'menu.jurnal_penerimaan_transfer', page: 'jurnal_penerimaan_transfer' },
     ] },
-    { icon: 'users', label: 'menu.pegawai', page: 'pegawai' },
     { icon: 'book-open', label: 'menu.jurnal', page: 'jurnal' },
     { icon: 'bar-chart-3', label: 'menu.laporan', page: 'laporan' },
     { icon: 'file-text', label: 'menu.jurnal_akhir', page: 'jurnal_akhir' },
@@ -96,6 +117,9 @@ export const titleKeys: Record<string, string> = {
   siswa_detail: 'heading.profilSiswa', kwitansi: 'heading.kwitansi',
   rekapitulasi_kas: 'menu.rekapitulasi_kas',
   jenis_pembayaran: 'menu.jenis_pembayaran',
+  pajak: 'menu.pajak', bpjs_tk: 'menu.bpjsTk', bpjs_k: 'menu.bpjsK', kelola_komponen_pajak_bpjs: 'menu.kelolaKomponenPajakBpjs',
+  pegawai: 'menu.pegawai', pegawai_detail: 'heading.profilPegawai', arsip_pegawai: 'menu.arsip_pegawai', penggajian: 'menu.penggajian',
+  kelola_komponen_gaji: 'menu.kelolaKomponenGaji', kelola_slip_gaji: 'menu.kelolaSlipGaji', bayar_gaji: 'menu.bayarGaji', performa: 'menu.performa',
 };
 
 export function flattenMenuPages(role: RoleKey): string[] {

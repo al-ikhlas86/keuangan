@@ -23,5 +23,11 @@ public class Employee
     public string? Katalog { get; set; }      // kode katalog sumber ("SD"/"TK")
     public DateTime? SyncedAt { get; set; }
 
+    // --- Field KHUSUS Keuangan (tidak ada di Data Master, diisi admin keuangan di halaman detail
+    //     pegawai - dipakai penggajian: Tipe mengelompokkan Tetap/Honor, Pendidikan menentukan tarif
+    //     komponen per jenjang) ---
+    public string Tipe { get; set; } = "Tetap";   // Tetap | Honorer | Kontrak
+    public string? Pendidikan { get; set; }        // SMA | D3 | S1 | S2 | S3
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

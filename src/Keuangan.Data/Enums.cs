@@ -41,6 +41,7 @@ public enum StudentStatus { Aktif, Lulus, Keluar }
 // atau sudah tidak ada di data sumber (baris tetap ada utk riwayat slip gaji).
 public enum EmployeeStatus { Aktif, Nonaktif }
 
-public enum DocType { TRX, PAY, TAG, JE }
+// SLIP (2026-09-30) = nomor slip gaji - ditambah di ULANG supaya nilai enum yang sudah tersimpan tidak bergeser.
+public enum DocType { TRX, PAY, TAG, JE, SLIP }
 
 public enum ResetCadence { Monthly, Yearly, Never }

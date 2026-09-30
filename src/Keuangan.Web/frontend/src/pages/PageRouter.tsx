@@ -9,6 +9,17 @@ import { Siswa } from './Siswa';
 import { SiswaByStatus } from './SiswaByStatus';
 import { ArsipSiswa } from './ArsipSiswa';
 import { Pegawai } from './Pegawai';
+import { PegawaiDetail } from './PegawaiDetail';
+import { ArsipPegawai } from './ArsipPegawai';
+import { Penggajian } from './Penggajian';
+import { KelolaKomponenGaji } from './KelolaKomponenGaji';
+import { KelolaSlipGaji } from './KelolaSlipGaji';
+import { BayarGaji } from './BayarGaji';
+import { Performa } from './Performa';
+import { Pajak } from './Pajak';
+import { BpjsTk } from './BpjsTk';
+import { BpjsK } from './BpjsK';
+import { KelolaKomponenPajakBpjs } from './KelolaKomponenPajakBpjs';
 import { SiswaDetail } from './SiswaDetail';
 import { TagihanPembayaran } from './TagihanPembayaran';
 import { TerimaPembayaran } from './TerimaPembayaran';
@@ -30,7 +41,8 @@ export function PageRouter() {
   const { page } = useRole();
 
   useEffect(() => {
-    if (page !== 'kwitansi') {
+    // penggajian menulis @page (landscape) sendiri saat mount - jangan dihapus effect ini.
+    if (page !== 'kwitansi' && page !== 'penggajian') {
       const el = document.getElementById('dynamicPageStyle');
       if (el) el.textContent = '';
     }
@@ -47,6 +59,17 @@ export function PageRouter() {
   if (page === 'siswa_belum_lunas') return <SiswaByStatus kind="BelumLunas" />;
   if (page === 'arsip_siswa') return <ArsipSiswa />;
   if (page === 'pegawai') return <Pegawai />;
+  if (page === 'pegawai_detail') return <PegawaiDetail />;
+  if (page === 'arsip_pegawai') return <ArsipPegawai />;
+  if (page === 'penggajian') return <Penggajian />;
+  if (page === 'kelola_komponen_gaji') return <KelolaKomponenGaji />;
+  if (page === 'kelola_slip_gaji') return <KelolaSlipGaji />;
+  if (page === 'bayar_gaji') return <BayarGaji />;
+  if (page === 'performa') return <Performa />;
+  if (page === 'pajak') return <Pajak />;
+  if (page === 'bpjs_tk') return <BpjsTk />;
+  if (page === 'bpjs_k') return <BpjsK />;
+  if (page === 'kelola_komponen_pajak_bpjs') return <KelolaKomponenPajakBpjs />;
   if (page === 'siswa_detail') return <SiswaDetail />;
   if (page === 'tagihan_pembayaran') return <TagihanPembayaran />;
   if (page === 'terima_pembayaran') return <TerimaPembayaran />;

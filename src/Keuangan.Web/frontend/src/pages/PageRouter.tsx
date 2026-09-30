@@ -17,6 +17,8 @@ import { KelolaSlipGaji } from './KelolaSlipGaji';
 import { BayarGaji } from './BayarGaji';
 import { Performa } from './Performa';
 import { Pajak } from './Pajak';
+import { ValidasiPembayaran } from './ValidasiPembayaran';
+import { RekonsiliasiBank } from './RekonsiliasiBank';
 import { BpjsTk } from './BpjsTk';
 import { BpjsK } from './BpjsK';
 import { KelolaKomponenPajakBpjs } from './KelolaKomponenPajakBpjs';
@@ -67,6 +69,8 @@ export function PageRouter() {
   if (page === 'bayar_gaji') return <BayarGaji />;
   if (page === 'performa') return <Performa />;
   if (page === 'pajak') return <Pajak />;
+  if (page === 'validasi_pembayaran') return <ValidasiPembayaran />;
+  if (page === 'rekonsiliasi_bank') return <RekonsiliasiBank />;
   if (page === 'bpjs_tk') return <BpjsTk />;
   if (page === 'bpjs_k') return <BpjsK />;
   if (page === 'kelola_komponen_pajak_bpjs') return <KelolaKomponenPajakBpjs />;

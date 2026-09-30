@@ -3,7 +3,7 @@ import { Banknote, CreditCard, Zap } from 'lucide-react';
 import { useI18n } from '../contexts/I18nContext';
 import { useToast } from '../contexts/ToastContext';
 import {
-  receivePayment, autoAllocatePayment, fetchStudents, fetchTagihan, fetchAccounts, ApiError,
+  receivePayment, autoAllocatePayment, depositSaldo, fetchSaldo, fetchStudents, fetchTagihan, fetchAccounts, ApiError,
   type StudentDto, type TagihanDto, type AccountDto, type PaymentReceiveMethod, type JournalLineInput,
 } from '../api';
 import { fmt } from '../lib/format';
@@ -22,7 +22,8 @@ export function TerimaPembayaran() {
   const { showToast } = useToast();
   const [students, setStudents] = useState<StudentDto[]>([]);
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
-  const [mode, setMode] = useState<'manual' | 'otomatis'>('manual');
+  const [mode, setMode] = useState<'manual' | 'otomatis' | 'saldo'>('manual');
+  const [saldoSiswa, setSaldoSiswa] = useState<number | null>(null);
   const [method, setMethod] = useState<PaymentReceiveMethod>('Cash');
   const [studentId, setStudentId] = useState<number | null>(null);
   const [openTagihan, setOpenTagihan] = useState<TagihanDto[]>([]);
@@ -42,7 +43,9 @@ export function TerimaPembayaran() {
 
   useEffect(() => {
     setPaidAmounts(new Map());
+    setSaldoSiswa(null);
     if (!studentId) { setOpenTagihan([]); return; }
+    fetchSaldo(studentId).then((s) => setSaldoSiswa(s.saldo)).catch(() => setSaldoSiswa(null));
     fetchTagihan({ studentId }).then((all) => setOpenTagihan(all.filter((t) => t.status !== 'Lunas')))
       .catch((err) => showToast(err instanceof ApiError ? err.message : 'Gagal memuat tagihan siswa.', 'error'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,6 +117,28 @@ export function TerimaPembayaran() {
     }
   }
 
+  // Setoran saldo ("titip"/bayar di muka): uang masuk atas nama siswa tanpa dialokasikan ke tagihan. Dipakai
+  // nanti lewat Validasi Pembayaran (usul -> validasi) atau saldo langsung dipakai kasir yang berwenang.
+  async function simpanSaldo() {
+    if (!studentId || autoAmount <= 0) { showToast(tt('msg.semuaFieldWajib'), 'error'); return; }
+    if (!debitAccountId || !creditAccountId) { showToast('Pilih akun debit dan kredit terlebih dahulu.', 'error'); return; }
+    setSubmitting(true);
+    try {
+      const r = await depositSaldo({
+        studentId, paymentDate: new Date().toISOString().slice(0, 10), method: method === 'Transfer' ? 'Transfer' : 'Cash', amount: autoAmount,
+        journalLines: [{ accountId: debitAccountId, debit: autoAmount, credit: 0 }, { accountId: creditAccountId, debit: 0, credit: autoAmount }],
+        description: description.trim() || undefined,
+      });
+      setAutoAmount(0);
+      setSaldoSiswa(r.saldo);
+      showToast(tt('msg.berhasil'));
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Gagal menyimpan setoran saldo.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   const isCash = method === 'Cash';
 
   return (
@@ -123,6 +148,7 @@ export function TerimaPembayaran() {
         <div className="flex gap-1.5 mb-4 p-1 rounded-lg bg-dark-900/60 no-print">
           <button type="button" onClick={() => setMode('manual')} className={`flex-1 py-1.5 rounded-md text-xs font-medium ${mode === 'manual' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}>{tt('btn.modeManual')}</button>
           <button type="button" onClick={() => setMode('otomatis')} className={`flex-1 py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1 ${mode === 'otomatis' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}><Zap className="w-3 h-3" />{tt('btn.modeOtomatis')}</button>
+          <button type="button" onClick={() => setMode('saldo')} className={`flex-1 py-1.5 rounded-md text-xs font-medium ${mode === 'saldo' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}>Titip ke Saldo</button>
         </div>
         <div className="space-y-3">
           <div>
@@ -134,8 +160,6 @@ export function TerimaPembayaran() {
             <select value={method} onChange={(e) => setMethod(e.target.value as PaymentReceiveMethod)} className="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-brand-500">
               <option value="Cash">{tt('misc.tunaiCash')}</option>
               <option value="Transfer">Transfer</option>
-              <option value="Saldo">Saldo</option>
-              <option value="Keringanan">Keringanan</option>
             </select>
           </div>
           {needsJournal && (
@@ -160,7 +184,7 @@ export function TerimaPembayaran() {
             <label className="text-[10px] text-gray-500 block mb-1">{tt('col.keterangan')}</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-brand-500" />
           </div>
-          <button type="button" onClick={mode === 'manual' ? simpanManual : simpanOtomatis} disabled={submitting} className={`w-full py-2.5 rounded-lg ${isCash ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white text-xs font-semibold disabled:opacity-50`}>
+          <button type="button" onClick={mode === 'manual' ? simpanManual : mode === 'otomatis' ? simpanOtomatis : simpanSaldo} disabled={submitting} className={`w-full py-2.5 rounded-lg ${isCash ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'} text-white text-xs font-semibold disabled:opacity-50`}>
             {isCash ? <Banknote className="w-3.5 h-3.5 inline mr-1" /> : <CreditCard className="w-3.5 h-3.5 inline mr-1" />}
             {tt('btn.simpanPembayaran')}
           </button>
@@ -211,6 +235,13 @@ export function TerimaPembayaran() {
                 </div>
               </>
             )}
+          </div>
+        ) : mode === 'saldo' ? (
+          <div>
+            <label className="text-[10px] text-gray-500 block mb-1">Nominal yang dititipkan</label>
+            <input type="number" value={autoAmount || ''} onChange={(e) => setAutoAmount(parseInt(e.target.value) || 0)} placeholder="0" className="w-full bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300 focus:outline-none focus:border-brand-500" />
+            <p className="text-[10px] text-gray-400 mt-1">Uang dicatat sebagai pemasukan atas nama siswa dan menjadi <b>saldo</b> - belum melunasi tagihan apa pun. Pakai menu Validasi Pembayaran untuk mengalokasikannya ke tagihan.</p>
+            {studentId && saldoSiswa !== null && <p className="text-xs mt-3 text-white">Saldo siswa saat ini: <b className="text-amber-400">{fmt(saldoSiswa)}</b></p>}
           </div>
         ) : (
           <div>

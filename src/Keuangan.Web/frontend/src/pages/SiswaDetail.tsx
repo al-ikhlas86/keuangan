@@ -5,6 +5,7 @@ import { useRole } from '../contexts/RoleContext';
 import { useToast } from '../contexts/ToastContext';
 import { fetchStudentDetail, updateStudentFinance, addStudentVa, deleteStudentVa, promoteStudentVa, ApiError, type StudentDetailDto } from '../api';
 import { fmt } from '../lib/format';
+import { AjukanKeringananPanel } from '../components/AjukanKeringananPanel';
 
 // Disederhanakan total dari Akuntansi lama Fase 1 (lihat diskusi porting):
 // VA multi-nomor, nominal SPP khusus per siswa, generate rencana cicilan
@@ -148,7 +149,8 @@ export function SiswaDetail() {
             )}
           </div>
         </div>
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-4">
+          <AjukanKeringananPanel studentId={s.id} />
           <div className="bg-dark-800 rounded-xl border border-gray-700/50 p-5">
             <h4 className="text-sm font-bold text-white mb-3">{tt('heading.tagihanBelumLunas') || 'Tagihan Terbaru'} ({s.tagihanTerbaru.length})</h4>
             <div className="overflow-x-auto">

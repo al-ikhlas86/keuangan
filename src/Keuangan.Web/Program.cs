@@ -107,6 +107,7 @@ app.MapChartOfAccountsEndpoints();
 app.MapStudentsEndpoints();
 app.MapVaEndpoints();
 app.MapPayrollEndpoints();
+app.MapValidationEndpoints();
 app.MapEmployeesEndpoints();
 app.MapSyncEndpoints();
 app.MapFeeTypesEndpoints();

@@ -538,3 +538,62 @@ export function updateEmployeeRincianGaji(id: string, input: { tipe?: string; pe
   return apiFetch<null>(`/api/employees/${id}/rincian-gaji`, { method: 'PATCH', body: JSON.stringify(input) });
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+// ============================================================================
+// Validasi pembayaran (usulan alokasi saldo & keringanan), setoran saldo, rekonsiliasi bank
+// (2026-09-30) - lihat ValidationEndpoints.cs.
+// ============================================================================
+export function fetchSaldo(studentId: number) {
+  return apiFetch<{ saldo: number }>(`/api/payments/saldo/${studentId}`);
+}
+export function depositSaldo(input: {
+  studentId: number; paymentDate: string; method: 'Cash' | 'Transfer'; amount: number; journalLines: JournalLineInput[]; description?: string;
+}) {
+  return apiFetch<{ txCode: string; saldo: number }>('/api/payments/deposit', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export type ProposalStatus = 'PENDING' | 'VALIDATED' | 'REJECTED';
+export interface AllocationProposalItemDto { tagihanId: number; feeName: string; periodLabel: string; amount: number; tagihanTotal: number; tagihanStatus: string }
+export interface AllocationProposalDto {
+  id: number; studentId: number; studentName: string; nis: string; status: ProposalStatus; note: string; proposedByRole: string;
+  validatedByRole: string | null; validatedAt: string | null; createdAt: string; totalAmount: number; saldo: number; items: AllocationProposalItemDto[];
+}
+export function fetchAllocationProposals(status?: ProposalStatus) {
+  return apiFetch<AllocationProposalDto[]>(`/api/allocation-proposals/${status ? `?status=${status}` : ''}`);
+}
+export function createAllocationProposal(studentId: number, items: { tagihanId: number; amount: number }[], note: string) {
+  return apiFetch<{ id: number }>('/api/allocation-proposals/', { method: 'POST', body: JSON.stringify({ studentId, items, note }) });
+}
+export function decideAllocationProposal(id: number, decision: 'validate' | 'reject') {
+  return apiFetch<{ status: ProposalStatus }>(`/api/allocation-proposals/${id}/${decision}`, { method: 'POST' });
+}
+
+export type KeringananStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export interface KeringananItemDto { tagihanId: number; periodLabel: string; amount: number; tagihanStatus: string }
+export interface KeringananProposalDto {
+  id: number; studentId: number; studentName: string; nis: string; feeTypeId: number; feeTypeName: string; reason: string; status: KeringananStatus;
+  proposedByRole: string; decidedByRole: string | null; decidedAt: string | null; createdAt: string; totalAmount: number; items: KeringananItemDto[];
+}
+export function fetchKeringananProposals(status?: KeringananStatus) {
+  return apiFetch<KeringananProposalDto[]>(`/api/keringanan-proposals/${status ? `?status=${status}` : ''}`);
+}
+export function createKeringananProposal(studentId: number, feeTypeId: number, periodLabels: string[], reason: string) {
+  return apiFetch<{ id: number }>('/api/keringanan-proposals/', { method: 'POST', body: JSON.stringify({ studentId, feeTypeId, periodLabels, reason }) });
+}
+export function decideKeringananProposal(id: number, decision: 'validate' | 'reject') {
+  return apiFetch<{ status: KeringananStatus; dibebaskan?: number }>(`/api/keringanan-proposals/${id}/${decision}`, { method: 'POST' });
+}
+
+export interface BankLineDto { id: number; bankDate: string; description: string; amount: number; periodKey: string; matchedTransactionId: number | null; matchedTxCode: string | null }
+export function fetchBankLines() {
+  return apiFetch<BankLineDto[]>('/api/bank-lines/');
+}
+export function createBankLine(bankDate: string, description: string, amount: number) {
+  return apiFetch<{ id: number }>('/api/bank-lines/', { method: 'POST', body: JSON.stringify({ bankDate, description, amount }) });
+}
+export function deleteBankLine(id: number) {
+  return apiFetch<null>(`/api/bank-lines/${id}`, { method: 'DELETE' });
+}
+export function matchBankLine(id: number, transactionId: number | null) {
+  return apiFetch<{ matched: boolean }>(`/api/bank-lines/${id}/match`, { method: 'POST', body: JSON.stringify({ transactionId }) });
+}

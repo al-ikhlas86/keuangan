@@ -27,6 +27,11 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
     public DbSet<PayslipTemplateLine> PayslipTemplateLines => Set<PayslipTemplateLine>();
     public DbSet<PayslipTemplateComponentBinding> PayslipTemplateComponentBindings => Set<PayslipTemplateComponentBinding>();
     public DbSet<PayslipTemplateSumBinding> PayslipTemplateSumBindings => Set<PayslipTemplateSumBinding>();
+    public DbSet<PaymentAllocationProposal> PaymentAllocationProposals => Set<PaymentAllocationProposal>();
+    public DbSet<PaymentAllocationProposalItem> PaymentAllocationProposalItems => Set<PaymentAllocationProposalItem>();
+    public DbSet<KeringananProposal> KeringananProposals => Set<KeringananProposal>();
+    public DbSet<KeringananProposalItem> KeringananProposalItems => Set<KeringananProposalItem>();
+    public DbSet<BankStatementLine> BankStatementLines => Set<BankStatementLine>();
     public DbSet<StudentVirtualAccount> StudentVirtualAccounts => Set<StudentVirtualAccount>();
     public DbSet<FeeType> FeeTypes => Set<FeeType>();
     public DbSet<FeeTypeRate> FeeTypeRates => Set<FeeTypeRate>();
@@ -171,6 +176,32 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
 
         // --- SystemSetting ---
         b.Entity<SystemSetting>().HasKey(s => s.SettingKey);
+
+        // --- Validasi pembayaran & rekonsiliasi bank (lihat Entities/PaymentValidation.cs) ---
+        b.Entity<PaymentAllocationProposal>().HasIndex(p => p.Status);
+        b.Entity<PaymentAllocationProposal>()
+            .HasOne(p => p.Student).WithMany().HasForeignKey(p => p.StudentId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<PaymentAllocationProposalItem>().Property(i => i.Amount).HasPrecision(14, 2);
+        b.Entity<PaymentAllocationProposalItem>()
+            .HasOne(i => i.Proposal).WithMany(p => p.Items).HasForeignKey(i => i.ProposalId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<PaymentAllocationProposalItem>()
+            .HasOne(i => i.Tagihan).WithMany().HasForeignKey(i => i.TagihanId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<KeringananProposal>().HasIndex(p => p.Status);
+        b.Entity<KeringananProposal>()
+            .HasOne(p => p.Student).WithMany().HasForeignKey(p => p.StudentId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<KeringananProposal>()
+            .HasOne(p => p.FeeType).WithMany().HasForeignKey(p => p.FeeTypeId).OnDelete(DeleteBehavior.Restrict);
+        b.Entity<KeringananProposalItem>()
+            .HasOne(i => i.Proposal).WithMany(p => p.Items).HasForeignKey(i => i.ProposalId).OnDelete(DeleteBehavior.Cascade);
+        b.Entity<KeringananProposalItem>()
+            .HasOne(i => i.Tagihan).WithMany().HasForeignKey(i => i.TagihanId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Entity<BankStatementLine>().HasIndex(l => l.PeriodKey);
+        b.Entity<BankStatementLine>().HasIndex(l => l.MatchedTransactionId).IsUnique();
+        b.Entity<BankStatementLine>().Property(l => l.Amount).HasPrecision(14, 2);
+        b.Entity<BankStatementLine>()
+            .HasOne(l => l.MatchedTransaction).WithMany().HasForeignKey(l => l.MatchedTransactionId).OnDelete(DeleteBehavior.SetNull);
 
         // --- Penggajian (lihat Entities/Payroll.cs) ---
         b.Entity<PayrollComponentType>().HasIndex(c => c.Code).IsUnique();

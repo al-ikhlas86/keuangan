@@ -78,6 +78,10 @@ public static class PaymentsEndpoints
         // "Saldo"/"Keringanan" BUKAN uang sungguhan - TIDAK PERNAH membuat
         // FinancialTransaction/JournalEntry (lihat catatan panjang di
         // Entities/Payment.cs). Cash/Transfer WAJIB py baris jurnal seimbang.
+        // Metode "Saldo" wajib didukung saldo nyata siswa - kalau tidak, saldo bisa "dibuat dari udara".
+        if (method == PaymentReceiveMethod.Saldo && totalAmount > await ValidationEndpoints.SaldoAsync(db, studentId))
+            return Results.BadRequest(new { success = false, message = "Saldo siswa tidak cukup untuk pembayaran ini." });
+
         var isRealMoney = method is PaymentReceiveMethod.Cash or PaymentReceiveMethod.Transfer;
         FinancialTransaction? transaction = null;
 

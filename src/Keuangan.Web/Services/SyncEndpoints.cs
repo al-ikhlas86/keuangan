@@ -17,6 +17,7 @@ public static class SyncEndpoints
             {
                 KeuanganSyncService.KeyState, KeuanganSyncService.KeyStateAt, KeuanganSyncService.KeyOkAt,
                 KeuanganSyncService.KeyError, KeuanganSyncService.KeyUnauthorizedAt,
+                KeuanganPushService.KeyState, KeuanganPushService.KeyOkAt, KeuanganPushService.KeyError, KeuanganPushService.KeyPending,
             };
             var s = await db.SystemSettings.Where(x => keys.Contains(x.SettingKey))
                 .ToDictionaryAsync(x => x.SettingKey, x => x.SettingValue);
@@ -36,6 +37,12 @@ public static class SyncEndpoints
                     StateAt = Get(KeuanganSyncService.KeyStateAt),
                     LastOkAt = Get(KeuanganSyncService.KeyOkAt),
                     Error = Get(KeuanganSyncService.KeyError),
+                    // Kirim data keuangan ke Webview-App (push, lihat KeuanganPushService.cs):
+                    // tersambung | offline | menunggu_persetujuan | belum_ada_katalog | error.
+                    PushState = Get(KeuanganPushService.KeyState),
+                    PushOkAt = Get(KeuanganPushService.KeyOkAt),
+                    PushError = Get(KeuanganPushService.KeyError),
+                    PushPending = int.TryParse(Get(KeuanganPushService.KeyPending), out var pend) ? pend : 0,
                     Label = options.Value.EffectiveInstallationLabel,
                     Katalog = katalog,
                     Students = await db.Students.CountAsync(x => x.Status == StudentStatus.Aktif),

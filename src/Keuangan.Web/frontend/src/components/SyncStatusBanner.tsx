@@ -36,6 +36,16 @@ export function SyncStatusBanner() {
           {' · '}{s.students} siswa aktif, {s.employees} pegawai aktif · sinkron terakhir {formatWaktu(s.lastOkAt)}
         </>
       )}
+      {s.state === 'tersambung' && s.pushState && (
+        <div className="mt-1 opacity-90">
+          {s.pushState === 'tersambung' && s.pushPending === 0 && <>Data keuangan terkirim ke aplikasi orang tua &amp; pegawai · terakhir {formatWaktu(s.pushOkAt)}</>}
+          {s.pushState === 'tersambung' && s.pushPending > 0 && <>Mengirim data keuangan ke aplikasi · {s.pushPending} item menunggu</>}
+          {s.pushState === 'offline' && <>Tidak ada internet · data keuangan akan terkirim otomatis begitu tersambung{s.pushPending > 0 ? ` (${s.pushPending} item menunggu)` : ''}</>}
+          {s.pushState === 'belum_ada_katalog' && <>Pengiriman data keuangan menunggu Admin IT memilih katalog untuk instalasi ini</>}
+          {s.pushState === 'menunggu_persetujuan' && <>Pengiriman data keuangan menunggu persetujuan Admin IT</>}
+          {s.pushState === 'error' && <>Pengiriman data keuangan bermasalah{s.pushError ? ` · ${s.pushError}` : ''} · dicoba lagi otomatis</>}
+        </div>
+      )}
       {s.state === 'menunggu_persetujuan' && (
         <>
           <span className="font-semibold">Menunggu persetujuan Admin IT</span>

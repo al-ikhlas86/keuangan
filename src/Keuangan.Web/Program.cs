@@ -65,6 +65,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 // (Launcher), disimpan appsettings.json sebelah .exe.
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppSettings"));
 builder.Services.AddHttpClient<KeuanganSyncService>();
+builder.Services.AddHttpClient<KeuanganPushService>();
 builder.Services.AddHostedService<KeuanganSyncHostedService>();
 
 builder.Services.AddScoped<DocumentNumberService>();

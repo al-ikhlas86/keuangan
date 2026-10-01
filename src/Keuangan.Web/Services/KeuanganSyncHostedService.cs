@@ -21,6 +21,17 @@ public class KeuanganSyncHostedService(IServiceScopeFactory scopeFactory, ILogge
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Sync Webview-App: siklus gagal tak terduga - lanjut ke siklus berikutnya."); }
+
+            // Kirim data keuangan ke Webview-App (push) - TERPISAH dari try di atas
+            // supaya gagal-push tidak membatalkan pull identitas & sebaliknya.
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var push = scope.ServiceProvider.GetRequiredService<KeuanganPushService>();
+                await push.RunAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
+            catch (Exception ex) { logger.LogError(ex, "Push keuangan: siklus gagal tak terduga - lanjut ke siklus berikutnya."); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

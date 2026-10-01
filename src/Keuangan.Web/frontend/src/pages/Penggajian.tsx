@@ -6,7 +6,7 @@ import { useBootstrap } from '../contexts/BootstrapContext';
 import { ExportBtn, PrintBtn } from '../components/Buttons';
 import { PayrollFieldsForm } from '../components/PayrollFieldsForm';
 import { componentShortLabel, lineAmount, payrollColumnBlocks, penggajianPeriodLabel, penggajianYearOptions } from '../lib/payroll';
-import { fmt, monthNamesFullId, downloadCsv } from '../lib/format';
+import { fmt, monthNamesFullId, downloadExcel } from '../lib/format';
 import { fetchPayrollItemsList, type PayrollItemDto } from '../api';
 
 const LANDSCAPE_STYLE = `@page{size:A4 landscape;margin:0.2in;}
@@ -74,7 +74,7 @@ export function Penggajian() {
     setItemsByEmployee(map);
   }
 
-  const exportCsv = () => {
+  const exportExcel = () => {
     const rows = aktif.map((e) => {
       const item = itemsByEmployee[e.db_id];
       const lines = item?.lines || {};
@@ -82,7 +82,7 @@ export function Penggajian() {
       const potongan = deductionComponents.reduce((a, c) => a + lineAmount(lines, c.code), 0);
       return [e.id, e.nama, e.jabatan, jumlah, potongan, jumlah - potongan];
     });
-    downloadCsv('penggajian', ['ID', 'Nama', 'Jabatan', 'Jumlah', 'Potongan', 'Subtotal'], rows);
+    downloadExcel('penggajian', ['ID', 'Nama', 'Jabatan', 'Jumlah', 'Potongan', 'Subtotal'], rows);
   };
 
   function Row({ e, no }: { e: (typeof aktif)[number]; no: number }) {
@@ -131,7 +131,7 @@ export function Penggajian() {
     <div className="print-sheet bg-dark-800 rounded-xl border border-gray-700/50 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="text-sm font-bold text-white">{tt('heading.dataPenggajian')}</h3>
-        <div className="flex gap-2 no-print"><ExportBtn onClick={exportCsv} /><PrintBtn label="Penggajian" /></div>
+        <div className="flex gap-2 no-print"><ExportBtn onClick={exportExcel} /><PrintBtn label="Penggajian" /></div>
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-4 no-print">
         <select value={month} onChange={(e) => setMonth(parseInt(e.target.value))} className="bg-dark-900 border border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-300">

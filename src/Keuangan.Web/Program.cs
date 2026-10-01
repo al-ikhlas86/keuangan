@@ -115,6 +115,7 @@ app.MapVaEndpoints();
 app.MapPayrollEndpoints();
 app.MapValidationEndpoints();
 app.MapManagementEndpoints();
+app.MapExportEndpoints();
 app.MapEmployeesEndpoints();
 app.MapSyncEndpoints();
 app.MapDevSampleDataEndpoints();

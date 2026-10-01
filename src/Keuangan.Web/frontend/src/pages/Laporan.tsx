@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../contexts/I18nContext';
 import { useToast } from '../contexts/ToastContext';
 import { PrintBtn, ExportBtn } from '../components/Buttons';
-import { fmt, downloadCsv } from '../lib/format';
+import { fmt, downloadExcel } from '../lib/format';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS } from '../lib/consts';
 import { fetchTransactions, fetchTransactionDetail, fetchAccounts, ApiError, type TransactionDto, type AccountDto } from '../api';
 import { useRole } from '../contexts/RoleContext';
@@ -60,8 +60,8 @@ export function Laporan({ forcedRoles }: { forcedRoles?: string } = {}) {
   const totalMasuk = txList.filter((t) => t.txType === 'Masuk').reduce((a, t) => a + t.amount, 0);
   const totalKeluar = txList.filter((t) => t.txType === 'Keluar').reduce((a, t) => a + t.amount, 0);
 
-  const exportCsv = () => {
-    downloadCsv('laporan-keuangan', ['Kategori', 'Label', 'Jumlah'], [
+  const exportExcel = () => {
+    downloadExcel('laporan-keuangan', ['Kategori', 'Label', 'Jumlah'], [
       ...penerimaanDetail.map((d) => ['Penerimaan', d.label, d.value]),
       ...pengeluaranDetail.map((d) => ['Pengeluaran', d.label, d.value]),
     ]);
@@ -69,7 +69,7 @@ export function Laporan({ forcedRoles }: { forcedRoles?: string } = {}) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap no-print"><PrintBtn label="Laporan" /><ExportBtn onClick={exportCsv} /></div>
+      <div className="flex gap-2 flex-wrap no-print"><PrintBtn label="Laporan" /><ExportBtn onClick={exportExcel} /></div>
       <div className="print-sheet bg-dark-800 rounded-xl border border-gray-700/50 p-6">
         <div className="text-center mb-6 border-b border-gray-700/50 pb-4">
           <h2 className="text-lg font-bold text-white">{name}</h2>

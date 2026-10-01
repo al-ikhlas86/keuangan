@@ -5,10 +5,9 @@ import { useRole } from '../contexts/RoleContext';
 import { useToast } from '../contexts/ToastContext';
 import { ExportBtn } from '../components/Buttons';
 import {
-  fetchManagementSummary, fetchBackups, createBackup, deleteBackup, downloadBackup, uploadRestore, cancelRestore, fetchStudents, fetchEmployees, fetchTransactions,
+  fetchManagementSummary, fetchBackups, createBackup, deleteBackup, downloadBackup, uploadRestore, cancelRestore, fetchStudents, fetchEmployees, fetchTransactions, exportXlsx,
   ApiError, type ManagementSummary, type BackupInfo,
 } from '../api';
-import { downloadCsv } from '../lib/format';
 
 function ukuran(b: number): string {
   if (b >= 1048576) return `${(b / 1048576).toFixed(1)} MB`;
@@ -80,21 +79,16 @@ export function Manajemen() {
     }
   }
 
-  // Ekspor seluruh data (siswa, pegawai, transaksi) ke satu berkas CSV - tetap ada seperti di Akuntansi.
+  // Ekspor seluruh data (siswa, pegawai, transaksi) ke SATU berkas Excel dengan 3 sheet terpisah. Dulu CSV
+  // yang menumpuk 3 tabel berbeda dalam satu lembar (kolomnya menyatu & berantakan di Excel).
   async function exportSemuaData() {
     try {
       const [students, employees, tx] = await Promise.all([fetchStudents(), fetchEmployees(), fetchTransactions()]);
-      const rows: (string | number | null | undefined)[][] = [];
-      rows.push(['=== SISWA ===']);
-      rows.push(['No VA', 'Nama', 'NIS', 'Kelas', 'Katalog', 'Status']);
-      students.forEach((s) => rows.push([s.vaNumber, s.name, s.nis, s.className, s.katalog, s.status]));
-      rows.push([]); rows.push(['=== PEGAWAI ===']);
-      rows.push(['Nama', 'NIP', 'Jabatan', 'Tipe', 'Katalog', 'Status']);
-      employees.forEach((e) => rows.push([e.name, e.nip, e.jabatan, e.tipe, e.katalog, e.status]));
-      rows.push([]); rows.push(['=== TRANSAKSI ===']);
-      rows.push(['No Transaksi', 'Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah']);
-      tx.forEach((t) => rows.push([t.txCode, t.txDate, t.description, t.txType, t.paymentMethod, t.amount]));
-      downloadCsv('semua-data', rows[0].map(String), rows.slice(1));
+      await exportXlsx('semua-data', [
+        { name: 'Siswa', headers: ['No VA', 'Nama', 'NIS', 'Kelas', 'Katalog', 'Status'], rows: students.map((s) => [s.vaNumber, s.name, s.nis, s.className, s.katalog, s.status]) },
+        { name: 'Pegawai', headers: ['Nama', 'NIP', 'Jabatan', 'Tipe', 'Katalog', 'Status'], rows: employees.map((e) => [e.name, e.nip, e.jabatan, e.tipe, e.katalog, e.status]) },
+        { name: 'Transaksi', headers: ['No Transaksi', 'Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah'], rows: tx.map((t) => [t.txCode, t.txDate, t.description, t.txType, t.paymentMethod, t.amount]) },
+      ]);
       showToast(tt('msg.eksporExcelBerhasil'));
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Gagal mengekspor data.', 'error');

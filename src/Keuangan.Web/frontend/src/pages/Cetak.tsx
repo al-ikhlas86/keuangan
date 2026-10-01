@@ -3,7 +3,7 @@ import { useI18n } from '../contexts/I18nContext';
 import { useToast } from '../contexts/ToastContext';
 import { PrintBtn, ExportBtn } from '../components/Buttons';
 import { PengurusSignature } from '../components/PengurusSignature';
-import { fmt, downloadCsv, formatTanggalPanjang } from '../lib/format';
+import { fmt, downloadExcel, formatTanggalPanjang } from '../lib/format';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS, KWITANSI_ORG_CITY } from '../lib/consts';
 import { fetchTransactions, ApiError, type TransactionDto } from '../api';
 
@@ -31,11 +31,11 @@ export function Cetak({ role }: { role: 'kasir' | 'akuntansi' }) {
   const cashOut = txList.filter((t) => t.txType === 'Keluar' && t.paymentMethod === 'Cash').reduce((a, t) => a + t.amount, 0);
   const transferOut = txList.filter((t) => t.txType === 'Keluar' && t.paymentMethod === 'Transfer').reduce((a, t) => a + t.amount, 0);
 
-  const exportCsv = () => downloadCsv('cetak-laporan', ['Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah'], txList.map((t) => [t.txDate, t.description, t.txType, t.paymentMethod, t.amount]));
+  const exportExcel = () => downloadExcel('cetak-laporan', ['Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah'], txList.map((t) => [t.txDate, t.description, t.txType, t.paymentMethod, t.amount]));
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2 flex-wrap no-print"><PrintBtn label="Laporan" /><ExportBtn onClick={exportCsv} /></div>
+      <div className="flex gap-2 flex-wrap no-print"><PrintBtn label="Laporan" /><ExportBtn onClick={exportExcel} /></div>
       <div className="print-sheet bg-dark-800 rounded-xl border border-gray-700/50 p-6">
         <div className="text-center mb-6 border-b border-gray-700/50 pb-4">
           <h2 className="text-lg font-bold text-white">{name}</h2>

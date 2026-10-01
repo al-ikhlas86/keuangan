@@ -1,5 +1,6 @@
+import { exportXlsx } from '../api';
 // Disalin verbatim dari helper format/kalkulasi index.html (fmt, monthNamesId,
-// monthNamesFullId, computeMonthlyTrend, aggregateByAccount, downloadCsv).
+// monthNamesFullId, computeMonthlyTrend, aggregateByAccount; ekspor Excel = downloadExcel di bawah).
 export function fmt(n: number): string {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
 }
@@ -137,22 +138,12 @@ export function terbilang(n: number): string {
   return words.charAt(0).toUpperCase() + words.slice(1) + ' rupiah';
 }
 
-export function downloadCsv(filename: string, headers: string[], rows: (string | number | null | undefined)[][], onDone?: () => void) {
-  const esc = (v: string | number | null | undefined) => {
-    const s = v === null || v === undefined ? '' : String(v);
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-  };
-  const lines = [headers.map(esc).join(',')];
-  rows.forEach((row) => lines.push(row.map(esc).join(',')));
-  const csvContent = '﻿' + lines.join('\r\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename.endsWith('.csv') ? filename : filename + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  onDone?.();
+// Ekspor ke Excel (.xlsx) - menggantikan CSV (CSV membuat kolom menyatu saat dibuka di Excel). Server yang
+// membuat berkasnya (lihat ExportEndpoints.cs). Gagal -> toast ditangani pemanggil lewat onError atau diabaikan.
+export function downloadExcel(
+  filename: string, headers: string[], rows: (string | number | null | undefined)[][], onDone?: () => void, sheetName = 'Data',
+) {
+  exportXlsx(filename, [{ name: sheetName, headers, rows }])
+    .then(() => onDone?.())
+    .catch((err) => window.alert(err instanceof Error ? err.message : 'Gagal mengekspor ke Excel.'));
 }

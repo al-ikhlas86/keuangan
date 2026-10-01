@@ -8,7 +8,7 @@ import { PrintBtn, ExportBtn, KwitansiBtn } from '../components/Buttons';
 import { JournalAccountPicker } from '../components/JournalAccountPicker';
 import { useRole } from '../contexts/RoleContext';
 import { createTransaction, fetchTransactions, fetchAccounts, ApiError, type TransactionDto, type AccountDto, type PaymentMethod } from '../api';
-import { fmt, filterTransactionsByPeriod, downloadCsv } from '../lib/format';
+import { fmt, filterTransactionsByPeriod, downloadExcel } from '../lib/format';
 
 // Lampiran bukti (foto struk dll) DITUNDA - backend Fase 1 belum punya
 // endpoint upload (lihat plan: "transaksi tanpa lampiran foto dulu").
@@ -86,7 +86,7 @@ export function Pengeluaran() {
   useEffect(() => { load(); }, []);
 
   const keluar = filterTransactionsByPeriod(transactions, st);
-  const exportCsv = () => downloadCsv('pengeluaran', ['No Transaksi', 'Tanggal', 'Keterangan', 'Metode', 'Jumlah'], keluar.map((t) => [t.txCode, t.txDate, t.description, t.paymentMethod, t.amount]));
+  const exportExcel = () => downloadExcel('pengeluaran', ['No Transaksi', 'Tanggal', 'Keterangan', 'Metode', 'Jumlah'], keluar.map((t) => [t.txCode, t.txDate, t.description, t.paymentMethod, t.amount]));
 
   return (
     <>
@@ -94,7 +94,7 @@ export function Pengeluaran() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="text-sm font-bold text-white">{tt('heading.dataPengeluaran')} ({keluar.length})</h3>
           <div className="flex gap-2">
-            <PrintBtn label="Pengeluaran" /><ExportBtn onClick={exportCsv} />
+            <PrintBtn label="Pengeluaran" /><ExportBtn onClick={exportExcel} />
             <button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs font-medium"><Plus className="w-3.5 h-3.5" />{tt('btn.tambah')} {tt('menu.pengeluaran')}</button>
           </div>
         </div>

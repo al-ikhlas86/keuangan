@@ -647,3 +647,21 @@ export function fetchAuditLogs(params?: { module?: string; action?: string }) {
   const s = qs.toString();
   return apiFetch<AuditLogResult>(`/api/audit-logs${s ? `?${s}` : ''}`);
 }
+
+// ---- Ekspor Excel (.xlsx) - server membuat berkas (lihat ExportEndpoints.cs). CSV TIDAK dipakai lagi. ----
+export interface ExportSheetInput { name: string; headers: string[]; rows: (string | number | boolean | null | undefined)[][] }
+export async function exportXlsx(fileName: string, sheets: ExportSheetInput[]) {
+  const res = await apiRaw('/api/export/xlsx', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fileName, sheets: sheets.map((s) => ({ name: s.name, headers: s.headers, rows: s.rows.map((r) => r.map((v) => (v === undefined ? null : v))) })) }),
+  });
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName.toLowerCase().endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}

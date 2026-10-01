@@ -5,7 +5,7 @@ import { useToast } from '../contexts/ToastContext';
 import { usePeriodFilter } from '../contexts/PeriodFilterContext';
 import { PeriodFilterBar } from '../components/PeriodFilterBar';
 import { PrintBtn, ExportBtn, KwitansiBtn } from '../components/Buttons';
-import { fmt, filterTransactionsByPeriod, downloadCsv } from '../lib/format';
+import { fmt, filterTransactionsByPeriod, downloadExcel } from '../lib/format';
 import { fetchTransactions, ApiError, type TransactionDto, type PaymentMethod } from '../api';
 
 // Disederhanakan Fase 1: dulu difilter `source_role in [kasir,akuntansi]`
@@ -36,14 +36,14 @@ export function JurnalPenerimaan({ metode }: { metode: PaymentMethod }) {
   const masuk = filterTransactionsByPeriod(transactions, st);
   const total = masuk.reduce((a, t) => a + t.amount, 0);
 
-  const exportCsv = () => downloadCsv(metode === 'Cash' ? 'riwayat-pembayaran-cash' : 'riwayat-pembayaran-transfer', ['Tanggal', 'Siswa', 'Keterangan', 'Metode', 'Jumlah'],
+  const exportExcel = () => downloadExcel(metode === 'Cash' ? 'riwayat-pembayaran-cash' : 'riwayat-pembayaran-transfer', ['Tanggal', 'Siswa', 'Keterangan', 'Metode', 'Jumlah'],
     masuk.map((t) => [t.txDate, t.studentName, t.description, t.paymentMethod, t.amount]));
 
   return (
     <div className="print-sheet bg-dark-800 rounded-xl border border-gray-700/50 p-5">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="text-sm font-bold text-white">{heading} ({masuk.length})</h3>
-        <div className="flex gap-2"><PrintBtn label={metode === 'Cash' ? 'Riwayat Cash' : 'Riwayat Transfer'} /><ExportBtn onClick={exportCsv} /></div>
+        <div className="flex gap-2"><PrintBtn label={metode === 'Cash' ? 'Riwayat Cash' : 'Riwayat Transfer'} /><ExportBtn onClick={exportExcel} /></div>
       </div>
       <PeriodFilterBar ns={ns} />
       {loading ? <p className="text-xs text-gray-500 py-4">Memuat...</p> : (

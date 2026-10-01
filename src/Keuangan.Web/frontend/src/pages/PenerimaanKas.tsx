@@ -8,7 +8,7 @@ import { PrintBtn, ExportBtn, KwitansiBtn } from '../components/Buttons';
 import { JournalAccountPicker } from '../components/JournalAccountPicker';
 import { useRole } from '../contexts/RoleContext';
 import { createTransaction, fetchTransactions, fetchAccounts, ApiError, type TransactionDto, type AccountDto, type PaymentMethod } from '../api';
-import { fmt, filterTransactionsByPeriod, downloadCsv } from '../lib/format';
+import { fmt, filterTransactionsByPeriod, downloadExcel } from '../lib/format';
 
 // Menu terpisah utk role Admin Keuangan (Staff) - fungsinya sama dgn
 // Penerimaan.tsx (BEDA dari Akuntansi lama yang memfilter transaksi
@@ -89,7 +89,7 @@ export function PenerimaanKas() {
   useEffect(() => { load(); }, []);
 
   const masuk = filterTransactionsByPeriod(transactions, st);
-  const exportCsv = () => downloadCsv('penerimaan-kas', ['No Transaksi', 'Tanggal', 'Keterangan', 'Metode', 'Jumlah'], masuk.map((t) => [t.txCode, t.txDate, t.description, t.paymentMethod, t.amount]));
+  const exportExcel = () => downloadExcel('penerimaan-kas', ['No Transaksi', 'Tanggal', 'Keterangan', 'Metode', 'Jumlah'], masuk.map((t) => [t.txCode, t.txDate, t.description, t.paymentMethod, t.amount]));
 
   return (
     <>
@@ -97,7 +97,7 @@ export function PenerimaanKas() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h3 className="text-sm font-bold text-white">{tt('heading.dataPenerimaanKas')} ({masuk.length})</h3>
           <div className="flex gap-2">
-            <PrintBtn label="Penerimaan Kas" /><ExportBtn onClick={exportCsv} />
+            <PrintBtn label="Penerimaan Kas" /><ExportBtn onClick={exportExcel} />
             <button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-brand-600 text-white hover:bg-brand-700 text-xs font-medium"><Plus className="w-3.5 h-3.5" />{tt('btn.tambah')} {tt('menu.penerimaan_kas')}</button>
           </div>
         </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../contexts/I18nContext';
 import { useToast } from '../contexts/ToastContext';
 import { ExportBtn, PrintBtn } from '../components/Buttons';
-import { fmt, downloadCsv } from '../lib/format';
+import { fmt, downloadExcel } from '../lib/format';
 import { fetchTransactions, fetchTransactionDetail, ApiError, type TransactionDto, type TransactionDetailDto } from '../api';
 import { useRole } from '../contexts/RoleContext';
 import { scopeRolesFor } from '../lib/scope';
@@ -45,9 +45,9 @@ export function Jurnal({ forcedRoles }: { forcedRoles?: string } = {}) {
   const totalDebit = flatRows.reduce((a, r) => a + r.line.debit, 0);
   const totalCredit = flatRows.reduce((a, r) => a + r.line.credit, 0);
 
-  const exportCsv = () => {
+  const exportExcel = () => {
     const csvRows = flatRows.map(({ tx, line }) => [tx.txCode, tx.txDate, tx.description, line.accountName, line.debit, line.credit]);
-    downloadCsv('jurnal-umum', ['No Transaksi', 'Tanggal', 'Keterangan', 'Nama Akun', 'Debit', 'Kredit'], csvRows);
+    downloadExcel('jurnal-umum', ['No Transaksi', 'Tanggal', 'Keterangan', 'Nama Akun', 'Debit', 'Kredit'], csvRows);
   };
 
   return (
@@ -55,7 +55,7 @@ export function Jurnal({ forcedRoles }: { forcedRoles?: string } = {}) {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <h3 className="text-sm font-bold text-white">{tt('heading.jurnalUmum')}</h3>
         <div className="flex gap-2 no-print">
-          <ExportBtn onClick={exportCsv} />
+          <ExportBtn onClick={exportExcel} />
           <PrintBtn label="Jurnal" />
         </div>
       </div>

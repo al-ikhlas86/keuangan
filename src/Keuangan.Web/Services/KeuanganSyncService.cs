@@ -249,6 +249,10 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
             e.IsKepalaSekolah = item.KepalaSekolah;
             e.Status = item.Aktif ? EmployeeStatus.Aktif : EmployeeStatus.Nonaktif;
             e.StatusKeluar = item.StatusKeluar;
+            // Pendidikan (2026-10-01): jenjang baku dari gelar terakhir di Data Master (server sudah memetakan
+            // ke SMA|D3|S1|S2|S3). HANYA ditimpa kalau sumber memberi nilai valid - kosong/tidak dikenal TIDAK
+            // menghapus isian manual di halaman Pegawai (Data Master teks bebas, tidak selalu bisa dipetakan).
+            if (item.Pendidikan is { } pend && PayrollValues.EducationLevels.Contains(pend)) e.Pendidikan = pend;
             e.Katalog = item.Katalog;
             e.SyncedAt = now;
         }
@@ -302,5 +306,5 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
 
     private record SiswaRemote(int HubId, string Nama, string Nis, string? Kelas, string? Tingkat, string? Status, string? Katalog);
 
-    private record PegawaiRemote(int HubId, string Nama, string? Nip, string? Jabatan, bool KepalaSekolah, bool Aktif, string? StatusKeluar, string? Katalog);
+    private record PegawaiRemote(int HubId, string Nama, string? Nip, string? Jabatan, bool KepalaSekolah, bool Aktif, string? StatusKeluar, string? Pendidikan, string? Katalog);
 }

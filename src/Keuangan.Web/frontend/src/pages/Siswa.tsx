@@ -9,7 +9,7 @@ import { SearchBar } from '../components/SearchBar';
 import { FilterSelect } from '../components/FilterSelect';
 import { ImportVaModal } from '../components/ImportVaModal';
 import { fetchStudents, downloadVaTemplate, ApiError, type StudentDto } from '../api';
-import { downloadCsv } from '../lib/format';
+import { downloadExcel } from '../lib/format';
 
 // Mirror renderSiswa() lama, diporting ulang Fase 1: identitas siswa
 // READ-ONLY (hasil sinkron Webview-App, lihat StudentsEndpoints.cs) - tidak
@@ -68,7 +68,7 @@ export function Siswa() {
       : cmp(a.name, b.name));
   }, [students, katalog, kelas, vaFilter, urut]);
 
-  const exportCsv = () => downloadCsv('data-siswa', ['No VA', 'Nama', 'NIS', 'Kelas', 'Katalog', 'Status'], tampil.map((s) => [s.vaNumber, s.name, s.nis, s.className, s.katalog, s.status]));
+  const exportExcel = () => downloadExcel('data-siswa', ['No VA', 'Nama', 'NIS', 'Kelas', 'Katalog', 'Status'], tampil.map((s) => [s.vaNumber, s.name, s.nis, s.className, s.katalog, s.status]));
 
   async function unduhTemplate() {
     setMengunduh(true);
@@ -103,7 +103,7 @@ export function Siswa() {
               </button>
             </>
           )}
-          <ExportBtn onClick={exportCsv} />
+          <ExportBtn onClick={exportExcel} />
         </div>
       </div>
 

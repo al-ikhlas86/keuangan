@@ -7,7 +7,7 @@ import { LineChart } from '../components/LineChart';
 import { SyncStatusBanner } from '../components/SyncStatusBanner';
 import { ExportBtn } from '../components/Buttons';
 import { KwitansiBtn } from '../components/Buttons';
-import { fmt, computeMonthlyTrend, downloadCsv } from '../lib/format';
+import { fmt, computeMonthlyTrend, downloadExcel } from '../lib/format';
 import { fetchTransactions, fetchStudents, fetchTagihan, ApiError, type TransactionDto } from '../api';
 import { scopeRolesFor } from '../lib/scope';
 
@@ -74,7 +74,7 @@ export function Dashboard() {
 
   const recentTransactions = [...transactions].sort((a, b) => (b.txDate || '').localeCompare(a.txDate || '') || b.id - a.id).slice(0, 8);
 
-  const exportCsv = () => downloadCsv('transaksi-terbaru', ['No Transaksi', 'Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah'],
+  const exportExcel = () => downloadExcel('transaksi-terbaru', ['No Transaksi', 'Tanggal', 'Keterangan', 'Jenis', 'Metode', 'Jumlah'],
     transactions.map((t) => [t.txCode, t.txDate, t.description, t.txType, t.paymentMethod, t.amount]));
 
   if (loading) return <p className="text-sm text-gray-500">Memuat...</p>;
@@ -143,7 +143,7 @@ export function Dashboard() {
       <div className="bg-dark-800 rounded-xl border border-gray-700/50 p-5">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-sm font-bold text-white">{tt('heading.transaksiTerbaru')}</h3>
-          <ExportBtn onClick={exportCsv} />
+          <ExportBtn onClick={exportExcel} />
         </div>
         <p className="text-[10px] text-gray-500 mb-3">{tt('misc.lihatSemuaDiJurnal')}</p>
         <div className="overflow-x-auto">

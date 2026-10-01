@@ -48,6 +48,13 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
 
     public async Task RunAsync(CancellationToken ct = default)
     {
+        // Mode developer = sandbox terputus total dari VPS (tidak daftar, tidak menarik).
+        if (!options.Value.EffectiveSyncEnabled)
+        {
+            await CatatKeadaanAsync("dinonaktifkan", null, ct);
+            return;
+        }
+
         var baseUrl = options.Value.EffectiveWebviewApiUrl;
 
         var token = await BacaSettingAsync(KeyToken, ct);

@@ -190,15 +190,21 @@ export function fetchVersionInfo(force = false) {
 
 // ---- Status sinkron ke Webview-App (banner, lihat SyncEndpoints.cs) ----
 export interface SyncStatusDto {
-  state: 'belum_mulai' | 'menunggu_persetujuan' | 'tersambung' | 'error';
+  state: 'belum_mulai' | 'menunggu_persetujuan' | 'tersambung' | 'error' | 'dinonaktifkan';
   stateAt: string | null; lastOkAt: string | null; error: string | null; label: string;
   katalog: string[]; students: number; employees: number;
+  // developer = SANDBOX: database terpisah dari data asli, tidak terhubung ke VPS sama sekali.
+  mode: 'developer' | 'normal'; syncEnabled: boolean;
   // Kirim data keuangan ke aplikasi orang tua/pegawai (null = belum pernah jalan).
   pushState: 'tersambung' | 'offline' | 'menunggu_persetujuan' | 'belum_ada_katalog' | 'error' | 'dinonaktifkan' | null;
   pushOkAt: string | null; pushError: string | null; pushPending: number;
 }
 export function fetchSyncStatus() {
   return apiFetch<SyncStatusDto>('/api/sync/status');
+}
+// Hanya ada di mode developer (sandbox): isi siswa/pegawai PALSU supaya menu bisa dicoba.
+export function isiDataContoh() {
+  return apiFetch<{ siswaBaru: number; pegawaiBaru: number }>('/api/dev/sample-data', { method: 'POST' });
 }
 
 export interface StudentVaDto { id: number; vaNumber: string; label: string; isActive: boolean }

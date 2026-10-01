@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchSyncStatus, type SyncStatusDto } from '../api';
+import { fetchSyncStatus, isiDataContoh, type SyncStatusDto } from '../api';
 
 // Status sambungan ke Data Master (via Webview-App) - siswa & pegawai Keuangan
 // bersumber dari sana, jadi pengguna perlu tahu kalau belum disetujui Admin IT /
@@ -11,6 +11,8 @@ function formatWaktu(ts: string | null) {
 
 export function SyncStatusBanner() {
   const [s, setS] = useState<SyncStatusDto | null>(null);
+  const [sibuk, setSibuk] = useState(false);
+  const [pesanContoh, setPesanContoh] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -20,11 +22,39 @@ export function SyncStatusBanner() {
     return () => { cancelled = true; clearInterval(t); };
   }, []);
 
-  if (!s || s.state === 'belum_mulai') return null;
+  if (!s) return null;
+
+  // Mode developer = SANDBOX - database terpisah dari data asli dan TIDAK terhubung ke VPS
+  // sama sekali. Banner ini sengaja mencolok supaya tidak ada yang mengira ini data sungguhan.
+  if (s.mode === 'developer') {
+    const isi = async () => {
+      setSibuk(true); setPesanContoh('');
+      try {
+        const r = await isiDataContoh();
+        setPesanContoh(`Data contoh siap: +${r.siswaBaru} siswa, +${r.pegawaiBaru} pegawai. Muat ulang halaman untuk melihatnya.`);
+      } catch { setPesanContoh('Gagal mengisi data contoh.'); }
+      setSibuk(false);
+    };
+    return (
+      <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-300">
+        <span className="font-semibold">MODE DEVELOPER (SANDBOX)</span>
+        {' · '}data di sini terpisah dari data asli dan tidak terhubung ke server sekolah. Ganti ke mode Server (lewat "Ganti Pengaturan Jaringan") untuk memakai data sungguhan.
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button type="button" disabled={sibuk} onClick={isi} className="rounded-lg border border-amber-500/50 px-2.5 py-1 font-semibold hover:bg-amber-500/20 disabled:opacity-50">
+            {sibuk ? 'Mengisi…' : 'Isi data contoh (siswa & pegawai palsu)'}
+          </button>
+          {s.students === 0 && s.employees === 0 && <span className="opacity-90">Sandbox masih kosong - isi data contoh dulu supaya menu bisa dicoba.</span>}
+          {pesanContoh && <span>{pesanContoh}</span>}
+        </div>
+      </div>
+    );
+  }
+
+  if (s.state === 'belum_mulai') return null;
 
   const gaya =
     s.state === 'tersambung' ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-    : s.state === 'menunggu_persetujuan' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+    : s.state === 'menunggu_persetujuan' || s.state === 'dinonaktifkan' ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
     : 'border-red-500/30 bg-red-500/10 text-red-300';
 
   return (
@@ -46,6 +76,9 @@ export function SyncStatusBanner() {
           {s.pushState === 'menunggu_persetujuan' && <>Pengiriman data keuangan menunggu persetujuan Admin IT</>}
           {s.pushState === 'error' && <>Pengiriman data keuangan bermasalah{s.pushError ? ` · ${s.pushError}` : ''} · dicoba lagi otomatis</>}
         </div>
+      )}
+      {s.state === 'dinonaktifkan' && (
+        <><span className="font-semibold">Sinkronisasi dimatikan</span> · instalasi ini tidak terhubung ke server sekolah (diatur lewat pengaturan).</>
       )}
       {s.state === 'menunggu_persetujuan' && (
         <>

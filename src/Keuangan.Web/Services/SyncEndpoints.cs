@@ -43,6 +43,9 @@ public static class SyncEndpoints
                     PushOkAt = Get(KeuanganPushService.KeyOkAt),
                     PushError = Get(KeuanganPushService.KeyError),
                     PushPending = int.TryParse(Get(KeuanganPushService.KeyPending), out var pend) ? pend : 0,
+                    // developer = sandbox terputus dari VPS (lihat AppOptions.EffectiveSyncEnabled).
+                    Mode = options.Value.IsDeveloperMode ? "developer" : "normal",
+                    SyncEnabled = options.Value.EffectiveSyncEnabled,
                     Label = options.Value.EffectiveInstallationLabel,
                     Katalog = katalog,
                     Students = await db.Students.CountAsync(x => x.Status == StudentStatus.Aktif),

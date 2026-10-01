@@ -19,15 +19,15 @@ public class AppOptions
     // lewat AppSettings__Mode.
     public string? Mode { get; set; }
 
-    // Kirim data keuangan ke aplikasi orang tua/pegawai (KeuanganPushService).
-    // Kosong = otomatis: AKTIF untuk instalasi sungguhan, MATI untuk mode
-    // "developer". Alasan (2026-10-01): PC developer/uji yang sudah disetujui
-    // Admin IT terhubung ke VPS PRODUKSI - tanpa pengaman ini data TES ikut
-    // terkirim ke siswa/pegawai asli. Isi true/false untuk memaksa.
-    public bool? PushEnabled { get; set; }
+    // Sambungan ke VPS (tarik siswa/pegawai DAN kirim data keuangan). Kosong =
+    // otomatis: AKTIF untuk instalasi sungguhan, MATI TOTAL untuk mode
+    // "developer" (sandbox: tidak menarik, tidak mengirim, tidak mendaftar ke
+    // Admin IT). Isi true/false untuk memaksa.
+    public bool? SyncEnabled { get; set; }
 
-    public bool EffectivePushEnabled =>
-        PushEnabled ?? !string.Equals(Mode, "developer", StringComparison.OrdinalIgnoreCase);
+    public bool IsDeveloperMode => string.Equals(Mode, "developer", StringComparison.OrdinalIgnoreCase);
+
+    public bool EffectiveSyncEnabled => SyncEnabled ?? !IsDeveloperMode;
 
     public string EffectiveWebviewApiUrl =>
         string.IsNullOrWhiteSpace(WebviewApiUrl) ? DefaultWebviewApiUrl : WebviewApiUrl.Trim().TrimEnd('/');

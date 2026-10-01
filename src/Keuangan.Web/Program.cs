@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 // tes manual yg sudah set ConnectionStrings__Keuangan tetap menang).
 try
 {
-    var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Keuangan");
+    // Mode developer = folder sandbox terpisah (lihat ServerProcessManager.DataDirectory).
+    var isDeveloper = string.Equals(Environment.GetEnvironmentVariable("AppSettings__Mode"), "developer", StringComparison.OrdinalIgnoreCase);
+    var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), isDeveloper ? "Keuangan-Dev" : "Keuangan");
     var appDataDir = Path.Combine(dataDir, "App_Data");
     Directory.CreateDirectory(appDataDir);
 
@@ -115,6 +117,7 @@ app.MapValidationEndpoints();
 app.MapManagementEndpoints();
 app.MapEmployeesEndpoints();
 app.MapSyncEndpoints();
+app.MapDevSampleDataEndpoints();
 app.MapFeeTypesEndpoints();
 app.MapTransactionsEndpoints();
 app.MapTagihanEndpoints();

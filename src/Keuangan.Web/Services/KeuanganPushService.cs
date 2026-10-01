@@ -57,7 +57,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
 
     public async Task RunAsync(CancellationToken ct = default)
     {
-        if (!options.Value.EffectivePushEnabled)
+        if (!options.Value.EffectiveSyncEnabled)
         {
             await CatatAsync("dinonaktifkan", null, ct);
             return;

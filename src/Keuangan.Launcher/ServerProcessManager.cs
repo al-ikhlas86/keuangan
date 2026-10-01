@@ -29,7 +29,15 @@ public sealed class ServerProcessManager : IDisposable
 
     public event Action? ServerExitedUnexpectedly;
 
-    public string DataDirectory { get; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Keuangan");
+    // Folder data PER MODE (2026-10-01): "server" memakai folder "Keuangan" (data
+    // asli, sama persis seperti sebelumnya - tidak ada migrasi), "developer"
+    // memakai "Keuangan-Dev" (SANDBOX kosong, terpisah total). Sebelumnya semua
+    // mode berbagi 1 file keuangan.db - mode developer (tanpa login) bisa
+    // mengotori data asli. Ganti mode = ganti database; keduanya tidak pernah
+    // saling menimpa. Lihat juga Program.cs Keuangan.Web (jalur tanpa Launcher).
+    public string DataDirectory => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        _config.Mode == "developer" ? "Keuangan-Dev" : "Keuangan");
 
     public async Task<bool> StartAsync(CancellationToken ct)
     {

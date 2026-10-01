@@ -194,7 +194,7 @@ export interface SyncStatusDto {
   stateAt: string | null; lastOkAt: string | null; error: string | null; label: string;
   katalog: string[]; students: number; employees: number;
   // Kirim data keuangan ke aplikasi orang tua/pegawai (null = belum pernah jalan).
-  pushState: 'tersambung' | 'offline' | 'menunggu_persetujuan' | 'belum_ada_katalog' | 'error' | null;
+  pushState: 'tersambung' | 'offline' | 'menunggu_persetujuan' | 'belum_ada_katalog' | 'error' | 'dinonaktifkan' | null;
   pushOkAt: string | null; pushError: string | null; pushPending: number;
 }
 export function fetchSyncStatus() {

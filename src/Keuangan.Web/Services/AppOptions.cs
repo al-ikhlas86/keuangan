@@ -15,6 +15,20 @@ public class AppOptions
     // Kosong = pakai nama PC.
     public string? InstallationLabel { get; set; }
 
+    // Mode instalasi dari wizard Launcher (server | klien | developer), diteruskan
+    // lewat AppSettings__Mode.
+    public string? Mode { get; set; }
+
+    // Kirim data keuangan ke aplikasi orang tua/pegawai (KeuanganPushService).
+    // Kosong = otomatis: AKTIF untuk instalasi sungguhan, MATI untuk mode
+    // "developer". Alasan (2026-10-01): PC developer/uji yang sudah disetujui
+    // Admin IT terhubung ke VPS PRODUKSI - tanpa pengaman ini data TES ikut
+    // terkirim ke siswa/pegawai asli. Isi true/false untuk memaksa.
+    public bool? PushEnabled { get; set; }
+
+    public bool EffectivePushEnabled =>
+        PushEnabled ?? !string.Equals(Mode, "developer", StringComparison.OrdinalIgnoreCase);
+
     public string EffectiveWebviewApiUrl =>
         string.IsNullOrWhiteSpace(WebviewApiUrl) ? DefaultWebviewApiUrl : WebviewApiUrl.Trim().TrimEnd('/');
 

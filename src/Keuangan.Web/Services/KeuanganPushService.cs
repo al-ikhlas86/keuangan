@@ -32,7 +32,7 @@ namespace Keuangan.Web.Services;
 // khusus Supervisor (BiayaJabatan/PTKP/pajak) TIDAK PERNAH ikut dikirim.
 public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions<AppOptions> options, ILogger<KeuanganPushService> logger)
 {
-    public const string KeyState = "keuangan_push_state";       // tersambung | offline | menunggu_persetujuan | belum_ada_katalog | error
+    public const string KeyState = "keuangan_push_state";       // tersambung | offline | menunggu_persetujuan | belum_ada_katalog | error | dinonaktifkan
     public const string KeyOkAt = "keuangan_push_ok_at";
     public const string KeyError = "keuangan_push_error";
     public const string KeyPending = "keuangan_push_pending";   // jumlah item yang belum terkirim
@@ -57,6 +57,12 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
 
     public async Task RunAsync(CancellationToken ct = default)
     {
+        if (!options.Value.EffectivePushEnabled)
+        {
+            await CatatAsync("dinonaktifkan", null, ct);
+            return;
+        }
+
         var token = (await db.SystemSettings.FindAsync([KeuanganSyncService.KeyToken], ct))?.SettingValue;
         if (string.IsNullOrEmpty(token)) return; // belum terdaftar - urusan KeuanganSyncService
 

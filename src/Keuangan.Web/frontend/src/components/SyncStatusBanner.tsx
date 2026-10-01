@@ -41,6 +41,7 @@ export function SyncStatusBanner() {
           {s.pushState === 'tersambung' && s.pushPending === 0 && <>Data keuangan terkirim ke aplikasi orang tua &amp; pegawai · terakhir {formatWaktu(s.pushOkAt)}</>}
           {s.pushState === 'tersambung' && s.pushPending > 0 && <>Mengirim data keuangan ke aplikasi · {s.pushPending} item menunggu</>}
           {s.pushState === 'offline' && <>Tidak ada internet · data keuangan akan terkirim otomatis begitu tersambung{s.pushPending > 0 ? ` (${s.pushPending} item menunggu)` : ''}</>}
+          {s.pushState === 'dinonaktifkan' && <>Pengiriman data keuangan ke aplikasi dimatikan (mode developer) - data tes tidak dikirim ke produksi</>}
           {s.pushState === 'belum_ada_katalog' && <>Pengiriman data keuangan menunggu Admin IT memilih katalog untuk instalasi ini</>}
           {s.pushState === 'menunggu_persetujuan' && <>Pengiriman data keuangan menunggu persetujuan Admin IT</>}
           {s.pushState === 'error' && <>Pengiriman data keuangan bermasalah{s.pushError ? ` · ${s.pushError}` : ''} · dicoba lagi otomatis</>}

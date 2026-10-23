@@ -69,6 +69,7 @@ builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppSett
 builder.Services.AddHttpClient<KeuanganSyncService>();
 builder.Services.AddHttpClient<KeuanganPushService>();
 builder.Services.AddHostedService<KeuanganSyncHostedService>();
+builder.Services.AddHostedService<ServiceAutoUpdateHostedService>(); // update otomatis saat berjalan sbg Windows Service (tanpa buka aplikasi)
 
 builder.Services.AddScoped<DocumentNumberService>();
 builder.Services.AddScoped<TagihanService>();

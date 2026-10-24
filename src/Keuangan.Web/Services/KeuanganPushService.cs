@@ -102,6 +102,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/api/keuangan/push/ping");
             req.Headers.Add("X-Keuangan-Token", token);
+            req.Headers.TryAddWithoutValidation("X-App-Version", VersionEndpoints.ServerVersion);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(TimeSpan.FromSeconds(15));
             using var resp = await http.SendAsync(req, cts.Token);
@@ -266,6 +267,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
             };
             using var req = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/keuangan/push") { Content = JsonContent.Create(body) };
             req.Headers.Add("X-Keuangan-Token", token);
+            req.Headers.TryAddWithoutValidation("X-App-Version", VersionEndpoints.ServerVersion);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(TimeSpan.FromSeconds(60));
             using var resp = await http.SendAsync(req, cts.Token);

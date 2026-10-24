@@ -82,6 +82,7 @@ export function Sidebar() {
         )}
       </nav>
       <div className="p-3 border-t border-gray-700/50">
+        <p className="text-[10px] text-gray-500 px-2 pb-1" title="Versi tampilan Keuangan di perangkat ini">Keuangan {__APP_VERSION__ === 'dev' ? 'dev' : `v${__APP_VERSION__}`}</p>
         <div className="flex items-center gap-3 p-2">
           <div className="w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-xs font-bold text-white">A</div>
           <div className="flex-1 min-w-0">

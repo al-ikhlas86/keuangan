@@ -119,6 +119,7 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/api/keuangan/{path}");
             req.Headers.Add("X-Keuangan-Token", token);
+            req.Headers.TryAddWithoutValidation("X-App-Version", VersionEndpoints.ServerVersion);
             var etagLama = await BacaSettingAsync(etagKey, ct);
             if (!string.IsNullOrEmpty(etagLama)) req.Headers.TryAddWithoutValidation("If-None-Match", etagLama);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);

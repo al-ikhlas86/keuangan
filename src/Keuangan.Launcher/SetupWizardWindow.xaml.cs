@@ -12,7 +12,7 @@ public partial class SetupWizardWindow : Window
 {
     private readonly LauncherConfig _config;
     // Harus sama dengan AppOptions.DefaultWebviewApiUrl di Keuangan.Web (proyek terpisah).
-    private const string DefaultWebviewApiUrl = "https://alikhlas86.duckdns.org/mobile-api";
+    private const string DefaultWebviewApiUrl = "https://app.yayasanalikhlas86.sch.id/mobile-api";
 
     public SetupWizardWindow(LauncherConfig config)
     {

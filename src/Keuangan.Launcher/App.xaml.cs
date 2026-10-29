@@ -1,4 +1,6 @@
 using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -13,9 +15,42 @@ public partial class App : Application
     // lengkap di sana. Update dicek SEDINI mungkin (sebelum wizard pun
     // sempat tampil), exception tak tertangani dicatat ke log (bukan cuma
     // mati diam-diam).
+    // Mutex satu-instance: dipegang selama proses hidup (sengaja disimpan di field statis supaya tidak dibuang oleh GC).
+    private static Mutex? _kunciSatuInstance;
+
+    // Hanya SATU Launcher per folder instalasi (port dari DataMaster.Launcher, kejadian 2026-10-29: dua Launcher berjalan bersamaan,
+    // masing-masing mengunduh update lalu saling mengunci berkas, penyalinan gagal dan siklus update berputar tanpa henti). Instance yang
+    // dibuka ulang oleh proses lama (restart setelah update / ganti jaringan) menunggu sebentar sampai proses lama selesai keluar.
+    private static bool AmbilKunciSatuInstance()
+    {
+        var folder = AppContext.BaseDirectory.TrimEnd('\\', '/').ToLowerInvariant();
+        var nama = "Keuangan.Launcher." + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(folder)))[..16];
+        var mutex = new Mutex(false, @"Local\" + nama);
+        bool dapat;
+        try { dapat = mutex.WaitOne(TimeSpan.FromSeconds(8)); }
+        catch (AbandonedMutexException) { dapat = true; } // proses sebelumnya mati mendadak: kunci tetap sah diambil alih
+        if (!dapat)
+        {
+            mutex.Dispose();
+            return false;
+        }
+        _kunciSatuInstance = mutex;
+        return true;
+    }
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (!AmbilKunciSatuInstance())
+        {
+            MessageBox.Show("Keuangan sudah terbuka atau sedang memperbarui diri.\n\nTunggu sampai selesai (jangan buka lagi), atau cek jendela Keuangan yang sudah ada di taskbar.",
+                "Keuangan", MessageBoxButton.OK, MessageBoxImage.Information);
+            Shutdown();
+            return;
+        }
+        // Dibuka ulang oleh helper karena penyalinan update gagal: jangan langsung mengunduh lagi di sesi ini.
+        if (e.Args.Contains("--update-gagal")) UpdateChecker.LewatiSesiIni = true;
 
         try
         {
@@ -40,6 +75,13 @@ public partial class App : Application
         var updateApplied = await updateChecker.CheckAndApplyAsync(new ServerProcessManager(), CancellationToken.None);
         if (updateApplied) return; // Shutdown() sudah dipanggil di dalam - jangan lanjut apapun lagi
         splash.Close();
+
+        // Update otomatis ditahan karena gagal berulang, atau baru saja gagal disalin: beri tahu sekali, aplikasi lama tetap jalan.
+        if (UpdateChecker.PesanTahan is { } pesanTahan)
+            MessageBox.Show(pesanTahan, "Keuangan - Pembaruan", MessageBoxButton.OK, MessageBoxImage.Warning);
+        else if (UpdateChecker.LewatiSesiIni)
+            MessageBox.Show("Pembaruan otomatis gagal menimpa berkas (kemungkinan masih terkunci oleh program lain). Keuangan versi sekarang tetap bisa dipakai.\n\nTutup semua jendela Keuangan lalu buka lagi untuk mencoba kembali.\nRincian: %LocalAppData%\\Keuangan\\logs\\update_helper.log",
+                "Keuangan - Pembaruan", MessageBoxButton.OK, MessageBoxImage.Warning);
 
         var config = LauncherConfig.Load();
         if (!config.SetupSelesai)

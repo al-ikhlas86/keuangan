@@ -67,14 +67,16 @@ public partial class App : Application
             args.Handled = true;
         };
 
-        var splash = new UpdateSplashWindow();
-        splash.Show();
-        var updateChecker = new UpdateChecker();
-        updateChecker.StatusChanged += status => { if (status is not null) splash.SetStatus(status); };
-        updateChecker.ProgressChanged += splash.SetProgress;
-        var updateApplied = await updateChecker.CheckAndApplyAsync(new ServerProcessManager(), CancellationToken.None);
-        if (updateApplied) return; // Shutdown() sudah dipanggil di dalam - jangan lanjut apapun lagi
-        splash.Close();
+        // Pembaruan yang SUDAH diunduh lengkap (pengguna memilih "Nanti" kemarin): terapkan sekarang, cepat dan tanpa jaringan. Pemeriksaan dan unduhan baru
+        // TIDAK lagi di sini: berjalan di latar belakang dari MainWindow supaya aplikasi langsung bisa dipakai walau jaringan lambat.
+        if (!UpdateChecker.LewatiSesiIni && UpdateChecker.VersiSiap() is { } versiSiap)
+        {
+            var splash = new UpdateSplashWindow();
+            splash.Show();
+            splash.SetStatus($"Memasang pembaruan {versiSiap} yang sudah diunduh - aplikasi akan terbuka lagi otomatis...");
+            if (UpdateChecker.TerapkanBilaSiap(new ServerProcessManager())) return; // Shutdown() sudah dipanggil di dalam - jangan lanjut apapun lagi
+            splash.Close();
+        }
 
         // Update otomatis ditahan karena gagal berulang, atau baru saja gagal disalin: beri tahu sekali, aplikasi lama tetap jalan.
         if (UpdateChecker.PesanTahan is { } pesanTahan)

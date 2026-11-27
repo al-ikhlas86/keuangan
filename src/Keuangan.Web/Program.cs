@@ -98,7 +98,17 @@ using (var scope = app.Services.CreateScope())
 // path lain: app ini TIDAK pakai client-side URL routing (navigasi halaman
 // murni state React/localStorage via RoleContext, bukan react-router).
 app.UseDefaultFiles();
-app.UseStaticFiles();
+// Cache (2026-11-27, kejadian: sesudah update sidebar tetap v0.10.3): index.html dan berkas lain di akar WAJIB divalidasi ulang tiap dibuka (no-cache + ETag),
+// kalau tidak peramban/WebView2 memakai index.html lama yang menunjuk bundel JS lama. Bundel di /assets bernama hash isi, jadi aman disimpan lama.
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.CacheControl = ctx.Context.Request.Path.StartsWithSegments("/assets")
+            ? "public,max-age=31536000,immutable"
+            : "no-cache";
+    },
+});
 
 app.UseAuthentication();
 // Lihat DeveloperModeMiddleware.cs - HARUS setelah UseAuthentication (spy

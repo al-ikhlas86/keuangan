@@ -22,6 +22,8 @@ public partial class MainWindow : Window
         Closing += MainWindow_Closing;
         _server.ServerExitedUnexpectedly += Server_ExitedUnexpectedly;
         _updateChecker.StatusChanged += UpdateChecker_StatusChanged;
+        _updateChecker.ProgressChanged += UpdateChecker_ProgressChanged;
+        TaskbarItemInfo = new System.Windows.Shell.TaskbarItemInfo();
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -31,19 +33,13 @@ public partial class MainWindow : Window
 
     private async Task InisialisasiAsync()
     {
-        SetSplash("Memeriksa pembaruan...");
-        // Tidak memblokir start server - lihat App.xaml.cs, cek update UTAMA
-        // sudah dijalankan SEBELUM MainWindow ini pernah ada. Panggilan kedua
-        // di sini (biasanya no-op instan krn baru saja dicek) jaga-jaga kalau
-        // MainWindow di-restart manual (mis. tombol Ganti Pengaturan Jaringan)
-        // tanpa app.xaml.cs OnStartup terpanggil lagi.
-        _ = _updateChecker.CheckAndApplyAsync(_server, CancellationToken.None);
-
+        SetSplash("Menyiapkan aplikasi...");
         SetSplash(_server.IsKlien ? "Menyambung ke server Keuangan di jaringan..." : "Menyiapkan server lokal...");
         var envDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Keuangan", "webview2-data");
         Directory.CreateDirectory(envDataDir);
         var env = await CoreWebView2Environment.CreateAsync(userDataFolder: envDataDir);
         await Browser.EnsureCoreWebView2Async(env);
+        await BersihkanCacheBilaVersiBerubahAsync();
         Browser.CoreWebView2.Settings.IsPasswordAutosaveEnabled = true;
         Browser.CoreWebView2.Settings.IsGeneralAutofillEnabled = true;
 
@@ -72,20 +68,82 @@ public partial class MainWindow : Window
         {
             if (args.IsSuccess) TampilkanBrowser();
         };
+
+        // Aplikasi sudah bisa dipakai: pemeriksaan + unduhan pembaruan berjalan di latar belakang (tidak menghalangi apa pun).
+        _ = JalankanPembaruanLatarAsync();
     }
 
+    // ---- pembaruan di latar belakang ----
+
+    private readonly CancellationTokenSource _ctsPembaruan = new();
+
+    // Loop: periksa tiap 6 jam (PC bendahara sering dibiarkan menyala seharian). Bila sudah siap dan pengguna memilih "Nanti", tanya lagi 3 jam kemudian.
+    private async Task JalankanPembaruanLatarAsync()
+    {
+        var ct = _ctsPembaruan.Token;
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(15), ct); // beri waktu aplikasi tampil dulu
+            while (!ct.IsCancellationRequested)
+            {
+                var siap = await _updateChecker.PeriksaDanSiapkanAsync(ct);
+                if (siap is not null && await TanyaRestartAsync(siap)) return; // diterapkan: aplikasi menutup diri
+                await Task.Delay(TimeSpan.FromHours(siap is null ? 6 : 3), ct);
+            }
+        }
+        catch (OperationCanceledException) { /* aplikasi ditutup */ }
+    }
+
+    /// <summary>Popup "mulai ulang sekarang?" setelah unduhan selesai. true = pengguna setuju dan penerapan dimulai.</summary>
+    private async Task<bool> TanyaRestartAsync(string versi)
+    {
+        var jawab = await Dispatcher.InvokeAsync(() =>
+        {
+            var catatanServer = WindowsServiceHelper.IsInstalled()
+                ? "\n\nPC ini adalah server Keuangan: server berhenti beberapa detik, PC klien tersambung ulang sendiri."
+                : "";
+            return MessageBox.Show(this,
+                $"Pembaruan Keuangan versi {versi} sudah selesai diunduh dan siap dipasang.\n\nMulai ulang Keuangan sekarang? Hanya butuh beberapa detik.{catatanServer}\n\n" +
+                "Pilih Tidak (nanti) bila sedang bekerja: pembaruan dipasang otomatis saat Keuangan dibuka lagi.",
+                "Keuangan - Pembaruan siap", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
+        });
+        if (jawab != MessageBoxResult.Yes) return false;
+        return await Dispatcher.InvokeAsync(() => UpdateChecker.TerapkanSekarang(_server));
+    }
+
+    // WebView2 menyimpan index.html di cache disk; tanpa dibersihkan, tampilan versi lama bisa tetap tampil sesudah update (kejadian 2026-11-27: sidebar
+    // masih v0.10.3). Dibersihkan SEKALI tiap versi aplikasi berubah; sesi login tidak disentuh (hanya cache).
+    private async Task BersihkanCacheBilaVersiBerubahAsync()
+    {
+        try
+        {
+            var versi = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "?";
+            var berkas = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Keuangan", "versi_terakhir.txt");
+            var lama = File.Exists(berkas) ? File.ReadAllText(berkas).Trim() : "";
+            if (lama == versi) return;
+            await Browser.CoreWebView2.Profile.ClearBrowsingDataAsync(Microsoft.Web.WebView2.Core.CoreWebView2BrowsingDataKinds.DiskCache | Microsoft.Web.WebView2.Core.CoreWebView2BrowsingDataKinds.CacheStorage);
+            File.WriteAllText(berkas, versi);
+        }
+        catch { /* membersihkan cache tidak boleh menghalangi aplikasi terbuka */ }
+    }
+
+    // Kemajuan unduhan hanya di judul jendela + bilah tugas (BUKAN overlay: WebView2 menutupi elemen WPF di atasnya, dan layar penuh menghalangi pekerjaan).
     private void UpdateChecker_StatusChanged(string? status)
     {
-        Dispatcher.Invoke(() =>
+        Dispatcher.BeginInvoke(() =>
         {
-            if (status is null)
-            {
-                if (Browser.Visibility == Visibility.Visible) SplashOverlay.Visibility = Visibility.Collapsed;
-                return;
-            }
-            Browser.Visibility = Visibility.Collapsed;
-            SplashOverlay.Visibility = Visibility.Visible;
-            SplashStatus.Text = status;
+            Title = status is null ? "Keuangan" : $"Keuangan - {status}";
+            if (status is null) TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.None;
+        });
+    }
+
+    private void UpdateChecker_ProgressChanged(double? persen)
+    {
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (persen is null) { TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Indeterminate; return; }
+            TaskbarItemInfo.ProgressState = System.Windows.Shell.TaskbarItemProgressState.Normal;
+            TaskbarItemInfo.ProgressValue = Math.Clamp(persen.Value / 100.0, 0, 1);
         });
     }
 
@@ -124,6 +182,7 @@ public partial class MainWindow : Window
         // Service beneran di level OS utk tetap nyala walau app ditutup,
         // BUKAN trik minimize-ke-tray).
         _closingIntentionally = true;
+        _ctsPembaruan.Cancel();
         _server.StopIntentionally();
         Application.Current.Shutdown();
     }

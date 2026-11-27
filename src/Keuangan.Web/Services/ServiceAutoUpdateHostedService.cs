@@ -244,6 +244,8 @@ public class ServiceAutoUpdateHostedService(IConfiguration config, ILogger<Servi
                 robocopy $install $backup /MIR /R:2 /W:2 /NFL /NDL /NJH /NJS /NP | Out-Null
                 if ($LASTEXITCODE -ge 8) { throw "cadangan gagal (robocopy $LASTEXITCODE)" }
                 $sudahSalin = $true
+                # wwwroot lama dibuang dulu: bundel JS ber-hash yang tertinggal membuat index.html lama di cache klien tetap 'berfungsi' (tampilan versi lama).
+                if ((Test-Path -LiteralPath "$staging\web\wwwroot") -and (Test-Path -LiteralPath "$install\web\wwwroot")) { Remove-Item -LiteralPath "$install\web\wwwroot" -Recurse -Force -ErrorAction SilentlyContinue }
                 robocopy $staging $install /E /IS /IT /R:3 /W:3 /NFL /NDL /NJH /NJS /NP | Out-Null
                 if ($LASTEXITCODE -ge 8) { throw "penyalinan gagal (robocopy $LASTEXITCODE)" }
                 Start-Service -Name $svc

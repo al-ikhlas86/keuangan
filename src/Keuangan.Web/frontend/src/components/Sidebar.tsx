@@ -48,7 +48,7 @@ export function Sidebar() {
             <div key={m.key}>
               <button
                 onClick={() => toggleGroup(m.key)}
-                className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-400 hover:bg-dark-800"
+                className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-medium text-gray-400 hover:bg-dark-800"
               >
                 <span className="flex items-center gap-3">
                   <Icon name={m.icon} className="w-4 h-4 flex-shrink-0" />
@@ -61,7 +61,7 @@ export function Sidebar() {
                   <button
                     key={c.page}
                     onClick={() => navigateTo(c.page)}
-                    className={`sidebar-item w-full flex items-center gap-3 pl-9 pr-3 py-2 rounded-lg text-xs font-medium text-gray-400 ${page === c.page ? 'active' : ''}`}
+                    className={`sidebar-item w-full flex items-center gap-3 pl-9 pr-3 py-2 rounded-lg text-left text-xs font-medium text-gray-400 ${page === c.page ? 'active' : ''}`}
                   >
                     <Icon name={c.icon} className="w-3.5 h-3.5 flex-shrink-0" />
                     {tt(c.label)}
@@ -73,7 +73,7 @@ export function Sidebar() {
             <button
               key={i}
               onClick={() => navigateTo((m as { page: string }).page)}
-              className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium text-gray-400 ${page === (m as { page: string }).page ? 'active' : ''}`}
+              className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left text-xs font-medium text-gray-400 ${page === (m as { page: string }).page ? 'active' : ''}`}
             >
               <Icon name={m.icon} className="w-4 h-4 flex-shrink-0" />
               {tt(m.label)}

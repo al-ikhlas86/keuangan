@@ -170,6 +170,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
 
         // --- Tagihan (pemilik: siswa) ---
         var tagihan = await db.TagihanList.AsNoTracking()
+            .Where(t => t.Student.HubId > 0) // calon PSB (HubId negatif) belum punya akun orang tua: status awalnya dikirim terpisah sebagai calon_awal
             .Select(t => new { t.TagihanCode, Jenis = t.FeeType.Name, t.PeriodLabel, t.Amount, t.PaidAmount, t.DueDate, t.Status, t.CicilanKe, t.CicilanDari, HubId = t.Student.HubId })
             .ToListAsync(ct);
         foreach (var t in tagihan)
@@ -185,6 +186,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
 
         // --- Pembayaran (pemilik: siswa) ---
         var bayar = await db.Payments.AsNoTracking()
+            .Where(p => p.Student.HubId > 0)
             .Select(p => new
             {
                 p.PaymentCode, Jenis = p.FeeType.Name, p.PeriodLabel, p.PaymentDate, p.Method, p.Amount, p.Description,
@@ -204,7 +206,7 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
         // --- Saldo (pemilik: siswa) - rumus SAMA dgn ValidationEndpoints.SaldoAsync
         // (setoran masuk atas nama siswa dikurangi pembayaran selain Keringanan),
         // dihitung massal di memori (hindari 2 query per siswa tiap menit).
-        var siswaHub = await db.Students.AsNoTracking().Select(s => new { s.Id, s.HubId }).ToDictionaryAsync(s => s.Id, s => s.HubId, ct);
+        var siswaHub = await db.Students.AsNoTracking().Where(s => s.HubId > 0).Select(s => new { s.Id, s.HubId }).ToDictionaryAsync(s => s.Id, s => s.HubId, ct);
         var masuk = (await db.FinancialTransactions.AsNoTracking()
                 .Where(t => t.StudentId != null && t.TxType == TxType.Masuk).Select(t => new { Id = t.StudentId!.Value, t.Amount }).ToListAsync(ct))
             .GroupBy(x => x.Id).ToDictionary(g => g.Key, g => g.Sum(x => x.Amount));
@@ -216,6 +218,16 @@ public class KeuanganPushService(KeuanganDbContext db, HttpClient http, IOptions
             if (!siswaHub.TryGetValue(studentId, out var hubId)) continue;
             var saldo = masuk.GetValueOrDefault(studentId) - alokasi.GetValueOrDefault(studentId);
             hasil.Add(Buat("saldo", $"SALDO-{hubId}", "siswa", hubId, null, new { saldo }));
+        }
+
+        // --- Status tagihan awal calon siswa PSB (pemilik: calon = id pendaftar PSB) -> webview -> Data Master (calon baru bisa masuk kelas setelah lunas) ---
+        var awal = await db.Students.AsNoTracking().Where(s => s.PsbId != null)
+            .Select(s => new { PsbId = s.PsbId!.Value, Awal = s.TagihanList.Where(t => t.PeriodLabel.StartsWith(CalonSiswaLogika.AwalPrefix)).Select(t => new { t.Amount, t.PaidAmount }).ToList() })
+            .ToListAsync(ct);
+        foreach (var a in awal)
+        {
+            var st = CalonSiswaLogika.HitungStatus(a.Awal.Select(t => (t.Amount, t.PaidAmount)));
+            hasil.Add(Buat("calon_awal", a.PsbId.ToString(), "calon", a.PsbId, null, new { status = st.Kode, total = st.Total, dibayar = st.Dibayar }));
         }
 
         // --- Slip gaji (pemilik: pegawai) - HANYA yang sudah dibayar ---

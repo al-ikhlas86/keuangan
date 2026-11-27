@@ -7,6 +7,7 @@ import { Pengaturan } from './Pengaturan';
 import { JenisPembayaran } from './JenisPembayaran';
 import { Siswa } from './Siswa';
 import { SiswaByStatus } from './SiswaByStatus';
+import { CalonSiswa } from './CalonSiswa';
 import { ArsipSiswa } from './ArsipSiswa';
 import { Pegawai } from './Pegawai';
 import { PegawaiDetail } from './PegawaiDetail';
@@ -59,6 +60,7 @@ export function PageRouter() {
   if (page === 'pengaturan') return <Pengaturan />;
   if (page === 'jenis_pembayaran') return <JenisPembayaran />;
   if (page === 'siswa') return <Siswa />;
+  if (page === 'calon_siswa') return <CalonSiswa />;
   if (page === 'siswa_lunas') return <SiswaByStatus kind="Lunas" />;
   if (page === 'siswa_belum_lunas') return <SiswaByStatus kind="BelumLunas" />;
   if (page === 'arsip_siswa') return <ArsipSiswa />;

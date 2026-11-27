@@ -1114,6 +1114,9 @@ namespace Keuangan.Data.Migrations
                     b.Property<string>("Angkatan")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("AwalDibuatAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("BankAccountNo")
                         .HasColumnType("TEXT");
 
@@ -1141,6 +1144,9 @@ namespace Keuangan.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("PsbId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("SemesterTotal")
                         .HasPrecision(14, 2)
                         .HasColumnType("TEXT");
@@ -1167,6 +1173,9 @@ namespace Keuangan.Data.Migrations
                         .IsUnique();
 
                     b.HasIndex("Nis");
+
+                    b.HasIndex("PsbId")
+                        .IsUnique();
 
                     b.HasIndex("StudentCode")
                         .IsUnique();

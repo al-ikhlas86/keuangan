@@ -5,4 +5,7 @@
     <Project Path="src/Keuangan.MigrationTool/Keuangan.MigrationTool.csproj" />
     <Project Path="src/Keuangan.Web/Keuangan.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Keuangan.Tests/Keuangan.Tests.csproj" />
+  </Folder>
 </Solution>

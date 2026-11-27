@@ -27,7 +27,7 @@ namespace Keuangan.Web.Services;
 //      ditandai Keluar, pegawai Nonaktif (riwayat tagihan/slip gaji harus
 //      tetap ada). Kalau snapshot kosong sama sekali, rekonsiliasi dilewati
 //      (kemungkinan gangguan sumber, bukan semua orang keluar sekaligus).
-public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions<AppOptions> options, ILogger<KeuanganSyncService> logger)
+public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions<AppOptions> options, ILogger<KeuanganSyncService> logger, CalonSiswaService calonSiswa)
 {
     // SnakeCaseLower (BUKAN PropertyNameCaseInsensitive) - respons server key
     // snake_case (hub_id, status_keluar, dst) - beda KARAKTER (underscore), bukan
@@ -69,6 +69,10 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
 
         var pegawai = await TarikPegawaiAsync(baseUrl, token, ct);
         if (pegawai == Hasil.BelumDisetujui || pegawai == Hasil.Gagal) return;
+
+        // Calon siswa PSB (2026-11-28): kegagalan di sini TIDAK menghentikan status tersambung (identitas siswa/pegawai sudah berhasil).
+        var calon = await TarikCalonAsync(baseUrl, token, ct);
+        if (calon == Hasil.BelumDisetujui) return;
 
         await CatatKeadaanAsync("tersambung", null, ct);
         await SimpanSettingAsync(KeyOkAt, DateTime.UtcNow.ToString("O"), ct);
@@ -113,14 +117,14 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
     }
 
     // GET satu endpoint sinkron + If-None-Match. Balik (hasil, data, etagBaru).
-    private async Task<(Hasil, List<T>, string?)> AmbilAsync<T>(string baseUrl, string path, string token, string etagKey, CancellationToken ct)
+    private async Task<(Hasil, List<T>, string?)> AmbilAsync<T>(string baseUrl, string path, string token, string? etagKey, CancellationToken ct)
     {
         try
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}/api/keuangan/{path}");
             req.Headers.Add("X-Keuangan-Token", token);
             req.Headers.TryAddWithoutValidation("X-App-Version", VersionEndpoints.ServerVersion);
-            var etagLama = await BacaSettingAsync(etagKey, ct);
+            var etagLama = etagKey is null ? null : await BacaSettingAsync(etagKey, ct); // etagKey null = selalu ambil penuh (tanpa If-None-Match)
             if (!string.IsNullOrEmpty(etagLama)) req.Headers.TryAddWithoutValidation("If-None-Match", etagLama);
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(TimeSpan.FromSeconds(30));
@@ -173,11 +177,25 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
         var now = DateTime.UtcNow;
         var existing = await db.Students.ToDictionaryAsync(s => s.HubId, ct);
         var hubIdSumber = new HashSet<int>();
+        // Calon PSB yang belum jadi siswa: kandidat penggabungan bila siswa baru dengan nama + katalog yang SAMA muncul dari Data Master (CalonSiswaLogika.Cocokkan).
+        var kandidatCalon = existing.Values.Where(x => x.Status == StudentStatus.Calon && x.PsbId != null).Select(x => (x.Id, x.Name, x.Katalog)).ToList();
 
         foreach (var item in items)
         {
             hubIdSumber.Add(item.HubId);
             var status = PetaStatusSiswa(item.Status);
+
+            if (!existing.ContainsKey(item.HubId) && CalonSiswaLogika.Cocokkan(kandidatCalon, item.Nama, item.Katalog) is { } idCalon)
+            {
+                // Calon yang sama sudah jadi siswa: baris YANG SAMA dipakai terus (tagihan awal dan pembayarannya ikut), kini dengan HubId asli.
+                var calonRow = existing.Values.First(x => x.Id == idCalon);
+                existing.Remove(calonRow.HubId);
+                calonRow.HubId = item.HubId;
+                calonRow.StudentCode = $"STD-{item.HubId}";
+                existing[item.HubId] = calonRow;
+                kandidatCalon.RemoveAll(c => c.Id == idCalon);
+                logger.LogInformation("Calon PSB {Nama} kini siswa (HubId {Hub}); tagihan awal ikut.", calonRow.Name, item.HubId);
+            }
 
             if (!existing.TryGetValue(item.HubId, out var s))
             {
@@ -209,7 +227,7 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
         {
             foreach (var (hubId, s) in existing)
             {
-                if (hubIdSumber.Contains(hubId) || s.Status == StudentStatus.Keluar) continue;
+                if (hubIdSumber.Contains(hubId) || s.Status == StudentStatus.Keluar || s.Status == StudentStatus.Calon) continue; // calon PSB bukan bagian snapshot Data Master
                 s.Status = StudentStatus.Keluar;
                 keluar++;
             }
@@ -303,6 +321,16 @@ public class KeuanganSyncService(KeuanganDbContext db, HttpClient http, IOptions
         if (existing is null) db.SystemSettings.Add(new SystemSetting { SettingKey = key, SettingValue = value, UpdatedAt = DateTime.UtcNow });
         else { existing.SettingValue = value; existing.UpdatedAt = DateTime.UtcNow; }
         await db.SaveChangesAsync(ct);
+    }
+
+    // Langkah 4 - calon siswa PSB (webview /calon-siswa): lihat CalonSiswaService. Tanpa ETag (lihat di dalam).
+    private async Task<Hasil> TarikCalonAsync(string baseUrl, string token, CancellationToken ct)
+    {
+        // SENGAJA tanpa ETag: daftar kecil, dan tagihan awal yang tertunda (jenis pembayaran awal belum diatur staf) harus dicoba lagi tiap siklus.
+        var (hasil, items, _) = await AmbilAsync<CalonRemote>(baseUrl, "calon-siswa", token, null, ct);
+        if (hasil != Hasil.Ok) return hasil;
+        await calonSiswa.TerapkanAsync(items, ct);
+        return Hasil.Ok;
     }
 
     private record SiswaRemote(int HubId, string Nama, string Nis, string? Kelas, string? Tingkat, string? Status, string? Katalog);

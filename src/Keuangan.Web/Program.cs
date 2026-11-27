@@ -73,6 +73,7 @@ builder.Services.AddHostedService<ServiceAutoUpdateHostedService>(); // update o
 
 builder.Services.AddScoped<DocumentNumberService>();
 builder.Services.AddScoped<TagihanService>();
+builder.Services.AddScoped<CalonSiswaService>();
 
 var app = builder.Build();
 
@@ -112,6 +113,7 @@ app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapChartOfAccountsEndpoints();
 app.MapStudentsEndpoints();
+app.MapCalonSiswaEndpoints();
 app.MapVaEndpoints();
 app.MapPayrollEndpoints();
 app.MapValidationEndpoints();

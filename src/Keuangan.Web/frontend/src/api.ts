@@ -162,7 +162,7 @@ export function updateAccount(id: number, input: { name?: string; isActive?: boo
 // (Keluar ditambah v0.2.0 = siswa hilang dari data sumber), "Nonaktif" TIDAK
 // PERNAH ada (bug nyata sebelumnya: field ini ditambah menebak-nebak drpd
 // dicek ke source - beda dari TagihanStatus di bawah).
-export type StudentStatus = 'Aktif' | 'Lulus' | 'Keluar';
+export type StudentStatus = 'Aktif' | 'Lulus' | 'Keluar' | 'Calon'; // Calon = calon siswa PSB (v0.11.0), lihat CalonSiswa.tsx
 export interface StudentDto {
   id: number; studentCode: string; hubId: number | string | null; nis: string; name: string; className: string; tingkat: string;
   status: StudentStatus; katalog?: string | null; vaTambahan?: number; syncedAt: string | null; bankAccountNo: string | null; angkatan: string | null; vaNumber: string | null;
@@ -213,6 +213,15 @@ export interface StudentDetailDto extends StudentDto { virtualAccounts: StudentV
 export function fetchStudents(q?: string) {
   const qs = q ? `?q=${encodeURIComponent(q)}` : '';
   return apiFetch<StudentDto[]>(`/api/students/${qs}`);
+}
+export interface CalonTagihanDto { id: number; kode: string; jenis: string; periode: string; jumlah: number; dibayar: number }
+export interface CalonSiswaDto {
+  id: number; nomor: string; nama: string; katalog: string | null; tahunAjaran: string | null; kelasTujuan: string | null;
+  status: StudentStatus; sudahJadiSiswa: boolean; statusAwal: 'tanpa_tagihan' | 'belum' | 'sebagian' | 'lunas'; totalAwal: number; dibayarAwal: number; tagihan: CalonTagihanDto[];
+}
+export function fetchCalonSiswa(q?: string) {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : '';
+  return apiFetch<CalonSiswaDto[]>(`/api/calon-siswa/${qs}`);
 }
 export function fetchStudentDetail(id: number) {
   return apiFetch<StudentDetailDto>(`/api/students/${id}`);

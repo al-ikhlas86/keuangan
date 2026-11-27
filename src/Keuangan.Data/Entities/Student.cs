@@ -31,6 +31,12 @@ public class Student
     public DateTime? SyncedAt { get; set; } // null = belum pernah berhasil sinkron ulang sejak dibuat
     public string? Katalog { get; set; } // kode katalog sumber (mis. "SD"/"TK") - dari Webview-App, null utk data sebelum v0.2.0
 
+    // Calon siswa dari PSB (2026-11-28): PsbId = psb_pendaftar.id di webview. Calon memakai HubId NEGATIF (-PsbId, tak bentrok dengan HubId asli yang positif) dan Status Calon
+    // sampai muncul sebagai siswa sungguhan dari Data Master (CalonSiswaLogika.Cocokkan lalu baris yang sama dipakai terus, jadi tagihan awalnya ikut). AwalDibuatAt = tagihan awal
+    // sudah dibuat sekali (null = belum): tagihan yang dihapus staf tidak dibuat ulang tiap sinkron.
+    public int? PsbId { get; set; }
+    public DateTime? AwalDibuatAt { get; set; }
+
     // --- Field KHUSUS Keuangan (TIDAK ada di students_cache, ditambahkan
     //     lokal di sini - inilah "rincian yang ditambahkan Keuangan" yg
     //     dimaksud user) ---

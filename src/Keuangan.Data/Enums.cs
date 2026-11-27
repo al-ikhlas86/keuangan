@@ -35,7 +35,8 @@ public enum FeeFrekuensi { Sekali, Bulanan, Cicilan }
 // pindah/dihapus. Ditambah di ULANG (bukan menyisip) supaya nilai Aktif/Lulus
 // yang sudah tersimpan tetap sama. Baris tidak pernah dihapus (riwayat
 // tagihan/pembayaran harus tetap utuh).
-public enum StudentStatus { Aktif, Lulus, Keluar }
+// Calon (2026-11-28) = calon siswa dari PSB yang sudah DITERIMA tetapi belum muncul sebagai siswa di Data Master (lihat Student.PsbId). Ditambah di ULANG lagi.
+public enum StudentStatus { Aktif, Lulus, Keluar, Calon }
 
 // Status pegawai di Keuangan - Nonaktif = keluar/dinonaktifkan di Data Master
 // atau sudah tidak ada di data sumber (baris tetap ada utk riwayat slip gaji).

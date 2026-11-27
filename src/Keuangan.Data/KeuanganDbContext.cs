@@ -130,6 +130,7 @@ public class KeuanganDbContext(DbContextOptions<KeuanganDbContext> options) : Db
         // Nis TIDAK lagi unik (2026-09-29): Keuangan kini menarik >1 katalog (SD+TK), NIS
         // antar-katalog tidak dijamin unik; kunci identitas sebenarnya HubId (unik global).
         b.Entity<Student>().HasIndex(s => s.Nis);
+        b.Entity<Student>().HasIndex(s => s.PsbId).IsUnique();
         b.Entity<Student>().HasIndex(s => s.HubId).IsUnique(); // kunci pencocokan pull-sync, lihat catatan Entities/Student.cs
         b.Entity<Student>().HasIndex(s => s.VaNumber).IsUnique();
 

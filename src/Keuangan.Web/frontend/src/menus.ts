@@ -42,6 +42,7 @@ export const menus: Record<RoleKey, MenuItem[]> = {
     { icon: 'graduation-cap', label: 'menu.siswa_group', group: true, key: 'siswa_group', children: [
       { icon: 'graduation-cap', label: 'menu.siswa', page: 'siswa' },
       { icon: 'file-text', label: 'menu.tagihan', page: 'tagihan_pembayaran' },
+      { icon: 'user-check', label: 'menu.calon_siswa', page: 'calon_siswa' },
       { icon: 'check-circle', label: 'menu.siswa_lunas', page: 'siswa_lunas' },
       { icon: 'alert-circle', label: 'menu.siswa_belum_lunas', page: 'siswa_belum_lunas' },
       { icon: 'archive', label: 'menu.arsip_siswa', page: 'arsip_siswa' },
@@ -73,6 +74,7 @@ export const menus: Record<RoleKey, MenuItem[]> = {
     { icon: 'layout-dashboard', label: 'menu.dashboard', page: 'dashboard' },
     { icon: 'graduation-cap', label: 'menu.siswa_group', group: true, key: 'siswa_group', children: [
       { icon: 'graduation-cap', label: 'menu.siswa', page: 'siswa' },
+      { icon: 'user-check', label: 'menu.calon_siswa', page: 'calon_siswa' },
       { icon: 'check-circle', label: 'menu.siswa_lunas', page: 'siswa_lunas' },
       { icon: 'alert-circle', label: 'menu.siswa_belum_lunas', page: 'siswa_belum_lunas' },
       { icon: 'archive', label: 'menu.arsip_siswa', page: 'arsip_siswa' },
@@ -92,6 +94,7 @@ export const menus: Record<RoleKey, MenuItem[]> = {
     { icon: 'layout-dashboard', label: 'menu.dashboard', page: 'dashboard' },
     { icon: 'graduation-cap', label: 'menu.siswa_group', group: true, key: 'siswa_group', children: [
       { icon: 'graduation-cap', label: 'menu.siswa', page: 'siswa' },
+      { icon: 'user-check', label: 'menu.calon_siswa', page: 'calon_siswa' },
       { icon: 'check-circle', label: 'menu.siswa_lunas', page: 'siswa_lunas' },
       { icon: 'alert-circle', label: 'menu.siswa_belum_lunas', page: 'siswa_belum_lunas' },
       { icon: 'archive', label: 'menu.arsip_siswa', page: 'arsip_siswa' },
@@ -123,7 +126,7 @@ export const titleKeys: Record<string, string> = {
   cetak_kasir: 'menu.cetak_kasir', jurnal_akhir: 'menu.jurnal_akhir',
   cetak_akuntansi: 'menu.cetak_akuntansi', kelola_pengguna: 'menu.kelola_pengguna', bagan_akun: 'menu.bagan_akun',
   tagihan_pembayaran: 'menu.tagihan',
-  siswa_lunas: 'menu.siswa_lunas', siswa_belum_lunas: 'menu.siswa_belum_lunas', arsip_siswa: 'menu.arsip_siswa',
+  calon_siswa: 'menu.calon_siswa', siswa_lunas: 'menu.siswa_lunas', siswa_belum_lunas: 'menu.siswa_belum_lunas', arsip_siswa: 'menu.arsip_siswa',
   siswa_detail: 'heading.profilSiswa', kwitansi: 'heading.kwitansi',
   rekapitulasi_kas: 'menu.rekapitulasi_kas',
   jenis_pembayaran: 'menu.jenis_pembayaran',

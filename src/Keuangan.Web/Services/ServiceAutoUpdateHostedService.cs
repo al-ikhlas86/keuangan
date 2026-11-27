@@ -23,7 +23,7 @@ namespace Keuangan.Web.Services;
 // %ProgramData%\Keuangan\update\autoupdate.log.
 //
 // Matikan: AppSettings__AutoUpdateServer=false. Ubah jendela: AppSettings__AutoUpdateJamMulai/JamSelesai.
-public class ServiceAutoUpdateHostedService(IConfiguration config, ILogger<ServiceAutoUpdateHostedService> logger) : BackgroundService
+public class ServiceAutoUpdateHostedService(IConfiguration config, ILogger<ServiceAutoUpdateHostedService> logger, IServiceScopeFactory scopes) : BackgroundService
 {
     // Repo resmi Keuangan (rilis publik, tanpa token).
     private const string ApiLatestReleaseUrl = "https://api.github.com/repos/al-ikhlas86/keuangan/releases/latest";
@@ -88,6 +88,18 @@ public class ServiceAutoUpdateHostedService(IConfiguration config, ILogger<Servi
         }
     }
 
+    private async Task<bool> BolehRestartKapanSajaAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var scope = scopes.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<Keuangan.Data.KeuanganDbContext>();
+            var s = await db.SystemSettings.FindAsync([UpdatePengaturanEndpoints.KunciKapanSaja], ct);
+            return s?.SettingValue == "1";
+        }
+        catch { return false; } // basis data belum siap: tetap jendela malam (aman)
+    }
+
     private static Version VersiTerpasang() => Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0, 0);
 
     // true = skrip pembaruan sudah dijalankan.
@@ -120,6 +132,8 @@ public class ServiceAutoUpdateHostedService(IConfiguration config, ILogger<Servi
         _tertundaSejak = BacaTertundaSejak(remote);
         var jamMulai = int.TryParse(config["AppSettings:AutoUpdateJamMulai"], out var jm) ? jm : 22;
         var jamSelesai = int.TryParse(config["AppSettings:AutoUpdateJamSelesai"], out var js) ? js : 5;
+        // Pengaturan 'boleh restart kapan saja' (halaman Pengaturan, bawaan mati): jam mulai = jam selesai berarti sepanjang hari (lihat AutoUpdatePolicy.DalamJendela).
+        if (await BolehRestartKapanSajaAsync(ct)) { jamMulai = 0; jamSelesai = 0; }
         if (!AutoUpdatePolicy.BolehTerapkan(DateTime.Now, _tertundaSejak, BatasPaksa, jamMulai, jamSelesai))
         {
             Catat($"Versi {remote} tersedia (terpasang {terpasang}); menunggu jendela {jamMulai:00}:00-{jamSelesai:00}:00.");

@@ -119,6 +119,7 @@ app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { success = true, service = "keuangan-web", version = VersionEndpoints.ServerVersion }));
 app.MapVersionEndpoints();
+app.MapUpdatePengaturanEndpoints();
 app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapChartOfAccountsEndpoints();

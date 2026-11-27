@@ -184,6 +184,13 @@ export interface VersionInfoDto {
   version: string; startedAt: string; databaseMigration: string | null; migrationCount: number;
   latest: { status: 'terbaru' | 'ada_update' | 'tidak_bisa_dicek'; tag: string | null; checkedAt: string };
 }
+export function fetchUpdatePengaturan() {
+  return apiFetch<{ restartKapanSaja: boolean }>('/api/pengaturan/update');
+}
+export function simpanUpdatePengaturan(restartKapanSaja: boolean) {
+  return apiFetch<{ restartKapanSaja: boolean }>('/api/pengaturan/update', { method: 'PUT', body: JSON.stringify({ restartKapanSaja }) });
+}
+
 export function fetchVersionInfo(force = false) {
   return apiFetch<VersionInfoDto>(`/api/version${force ? '?force=true' : ''}`);
 }

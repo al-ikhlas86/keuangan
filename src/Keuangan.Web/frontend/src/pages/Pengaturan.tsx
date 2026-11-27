@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { DEFAULT_FOUNDATION_NAME, DEFAULT_FOUNDATION_ADDRESS } from '../lib/consts';
 import { fetchVersionInfo, type VersionInfoDto } from '../api';
 import { PayrollSettingsCard } from '../components/PayrollSettingsCard';
+import { PembaruanCard } from '../components/PembaruanCard';
 import { useRole } from '../contexts/RoleContext';
 
 // Disederhanakan total Fase 1: Info Yayasan (nama/alamat) tetap statis dari
@@ -76,6 +77,8 @@ export function Pengaturan() {
           </div>
         </div>
       </div>
+
+      <PembaruanCard adminServer={role === 'AdminManager' && mode === 'server'} />
 
       <div className="bg-dark-800 rounded-xl border border-gray-700/50 p-5">
         <h3 className="text-sm font-bold text-white mb-4">{tt('heading.informasiYayasan')}</h3>
